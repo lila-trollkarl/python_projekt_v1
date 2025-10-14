@@ -65,8 +65,26 @@ def gen_possible_words(perms):
     return words
 
 def is_valid(word, row):
-    return
+    possibilities = [] 
+    for i in range(len(row)-len(word)+1):
+        new_word = ['.']*i + list(word) + ['.']*(len(row)-len(word)-i)
+        possibilities.append(new_word)
+
+    for w in possibilities:
+        for x, y in zip(w, row):
+            if y != '.' and x != '.' and x != y:
+                return False
+    return True
 
 
 # print(gen_possible_words(permutate_hand(hand)))
-# print(gen_possible_words(permutate_hand(hand)))
+# print(gen_possible_words(permutate_hand(hand)))'
+a = ['.']*10
+b = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+print(is_valid("hej", b))
+
+word = "horseshoe"
+l =["h", "o", ".", ".", "s", ".", "h", ".", "."]
+
+
+print(is_valid(word, l))
