@@ -1,6 +1,6 @@
-import pygame
 import random
 import string
+from itertools import permutations
 
 # Hej välkommen
 # bla bla bla
@@ -8,6 +8,7 @@ import string
 # okej
 bla = 1
 
+dictionary = "SAOL13_AND_14.txt"
 
 letters = list(string.ascii_lowercase) + ['å','ä','ö']
 
@@ -21,7 +22,8 @@ board = [
     [' ', ' ', ' ', ' ', 'a', ' ']
 ]
 
-hand = random.sample(letters, 7)
+# hand = random.sample(letters, 7)
+hand = ["a", "b", "n", "c", "w", "a", "d"]
 
 # print(letters)
 # print(board)
@@ -29,9 +31,10 @@ hand = random.sample(letters, 7)
 
 # creates a new hand with the letters from a given row
 def new_hand(hand, row):
-    new_hand = hand
+    # copy to avoid just making a reference
+    new_hand = hand.copy()
     for c in row:
-        if c is not ' ':
+        if c != ' ':
             new_hand += c
     return new_hand
 
@@ -43,17 +46,27 @@ def rotate_counter(board):
 
 # takes a hand and generates all possible permutaions in a list
 def permutate_hand(hand):
-
-    return
+    perms = []
+    for i in range(2, len(hand)+1):
+        for w in permutations(hand, i):
+            perms.append(''.join(w))
+    return perms
 
 # checks which perms are an actual word and returns a list with those words
 def gen_possible_words(perms):
-    return
+    # set for removing duplicates
+    words = set()
+    with open (dictionary, "r") as f:
+        # set because its faster to search through
+        valid_words = set(line.strip() for line in f)
+    for w in perms:
+        if w in valid_words:
+            words.add(w)
+    return words
 
 def is_valid(word, row):
     return
 
-a = [[1,2,3],[4,5,6],[7,8,9]]
-print(a)
-r = rotate_counter(a)
-print(r)
+
+# print(gen_possible_words(permutate_hand(hand)))
+# print(gen_possible_words(permutate_hand(hand)))
