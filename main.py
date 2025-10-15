@@ -113,10 +113,17 @@ def gen_possible_words(perms):
 def is_valid(word, row):
     possibilities = []
     fits = True
+    # Generates list in the form
+# ["w", "o", "r", "d", ".", ".", ".", ".", ".", "."]
+# [".", "w", "o", "r", "d", ".", ".", ".", ".", "."]
+# [".", ".", "w", "o", "r", "d", ".", ".", ".", "."]
+#        ...
+#    ...
+# [".", ".", ".", ".", ".", ".", "w", "o", "r", "d"]
     for i in range(len(row)-len(word)+1):
         new_word = ['.']*i + list(word) + ['.']*(len(row)-len(word)-i)
         possibilities.append(new_word)
-
+# checks if these lists align with the row
     for w in possibilities:
         fits = True
         for x, y in zip(w, row):
@@ -124,9 +131,14 @@ def is_valid(word, row):
             if (y != '.' and x != '.') and x != y:
                 fits = False
                 break
-        if fits == True:
-            # print(w)
-            # print(row)
+            # Kollar att att celler brevid ordet är tomma eller början/slut av en rad
+        if fits:
+            start_of_word = w.index(word[0])
+            end_of_word = start_of_word + len(word) - 1
+            if (start_of_word >= 1 and row[start_of_word - 1] != '.') or (end_of_word < len(row) - 1 and row[end_of_word + 1] != '.'):
+                continue
+            print(w)
+            print(row)
             return True
     return False
 
@@ -144,5 +156,3 @@ for word in word_list:
     if is_valid(word, ls):
         g.append(word)
         print(word)
-
-print(word_points("hello"))
