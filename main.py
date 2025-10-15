@@ -6,9 +6,12 @@ from itertools import permutations
 # bla bla bla
 # hehe
 # okej
-bla = 1
 
+################################
 dictionary = "SAOL13_AND_14.txt"
+
+best_word = ""
+max_points = 0
 
 letters = list(string.ascii_lowercase) + ['å','ä','ö']
 
@@ -25,7 +28,7 @@ board = [
 # hand = random.sample(letters, 7)
 hand = ["a", "b", "n", "c", "w", "a", "d"]
 
-wordfeud_points_sv = {
+wordfeud_points = {
     'a': 1,
     'b': 4,
     'c': 8,
@@ -76,6 +79,15 @@ def rotate_clock(board):
 def rotate_counter(board):
     return (list(list(row) for row in zip(*board)))[::-1]
 
+# Checks how much points a word is worth with regards to only letters
+def word_points(word):
+    points = 0
+    for letter in word:
+        points += wordfeud_points[letter]
+
+    return points
+
+
 # takes a hand and generates all possible permutaions in a list
 def permutate_hand(hand):
     perms = []
@@ -108,13 +120,15 @@ def is_valid(word, row):
     for w in possibilities:
         fits = True
         for x, y in zip(w, row):
-            if y != '.' and x != '.' and x != y:
+            # print(x==y,x ,y)
+            if (y != '.' and x != '.') and x != y:
                 fits = False
                 break
         if fits == True:
+            # print(w)
+            # print(row)
             return True
     return False
-
 
 # print(gen_possible_words(permutate_hand(hand)))
 # print(gen_possible_words(permutate_hand(hand)))'
@@ -123,7 +137,7 @@ ls = ["b", ".", "x", ".", ".", ".", ".", "a", ".", "a"]
 # b = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
 # print(is_valid("hej", b))
 #
-word_list = gen_possible_words(permutate_hand(hand))
+word_list = gen_possible_words(permutate_hand(hand + ['x']))
 print(word_list)
 g = []
 for word in word_list:
@@ -131,3 +145,4 @@ for word in word_list:
         g.append(word)
         print(word)
 
+print(word_points("hello"))
