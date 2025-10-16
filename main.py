@@ -26,7 +26,6 @@ board = [
 ]
 
 # hand = random.sample(letters, 7)
-hand = ["a", "b", "n", "c", "w", "a", "d"]
 
 wordfeud_points = {
     'a': 1,
@@ -65,13 +64,13 @@ wordfeud_points = {
 # print(hand)
 
 # creates a new hand with the letters from a given row
-# def new_hand(hand, row):
-#     # copy to avoid just making a reference
-#     new_hand = hand.copy()
-#     for c in row:
-#         if c != ' ':
-#             new_hand += c
-#     return new_hand
+def new_hand(hand, row):
+    # copy to avoid just making a reference
+    new_hand = hand.copy()
+    for c in row:
+        if c != '.':
+            new_hand.append(c)
+    return new_hand
 
 # rotate board clockwise and counter clockwise
 def rotate_clock(board):
@@ -108,6 +107,14 @@ def gen_possible_words(perms):
             words.add(w)
     return words
 
+# Sätter igop ett ord och en rad
+def merge_row(word_row, row):
+    return [x if (x != '.' or y == '.') else y for x, y in zip(word_row, row)]
+
+
+# Kollar så att ett ord inte anvönder sig av bokstäver från raden om samma bokstäver inte är på samma plats
+# def check_letter_amount()
+
 
 # Exprimeterade lite....
 def is_valid(word, row):
@@ -139,20 +146,27 @@ def is_valid(word, row):
                 continue
             print(w)
             print(row)
+            print(merge_row(w, row))
             return True
     return False
 
 # print(gen_possible_words(permutate_hand(hand)))
 # print(gen_possible_words(permutate_hand(hand)))'
 # a = ['.']*10
+# hand = ["a", "b", "n", "c", "w", "a", "d"]
+hand = ["x"]
+ls2 = ["a", "n", "b", "a", "n", ".", ".", ".", ".", ".","."]
+hand2 = new_hand(hand, ls2)
 ls = ["b", ".", "x", ".", ".", ".", ".", "a", ".", "a"]
 # b = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
 # print(is_valid("hej", b))
 #
-word_list = gen_possible_words(permutate_hand(hand + ['x']))
+word_list = gen_possible_words(permutate_hand(hand2))
 print(word_list)
 g = []
 for word in word_list:
-    if is_valid(word, ls):
+    if is_valid(word, ls2):
         g.append(word)
         print(word)
+
+print(hand2)
