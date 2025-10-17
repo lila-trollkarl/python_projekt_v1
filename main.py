@@ -1,4 +1,3 @@
-import random
 import string
 from itertools import permutations
 
@@ -117,7 +116,7 @@ def merge_row(word_row, row):
 
 
 # Exprimeterade lite....
-def is_valid(word, row):
+def is_valid(word, row, hand):
     possibilities = []
     fits = True
     # Generates list in the form
@@ -132,12 +131,21 @@ def is_valid(word, row):
         possibilities.append(new_word)
 # checks if these lists align with the row
     for w in possibilities:
+        merged_row = merge_row(w, row)
         fits = True
         for x, y in zip(w, row):
             # print(x==y,x ,y)
             if (y != '.' and x != '.') and x != y:
                 fits = False
                 break
+            # Kollar så att ordet inte använder sig av bokstäver från raden på fel plats.
+            # behöver fixa
+
+        for letter in merged_row:
+            if letter not in hand:
+                if row.count(letter) != merged_row.count(letter): 
+                    fits = False
+                    break
             # Kollar att att celler brevid ordet är tomma eller början/slut av en rad
         if fits:
             start_of_word = w.index(word[0])
@@ -147,6 +155,7 @@ def is_valid(word, row):
             print(w)
             print(row)
             print(merge_row(w, row))
+
             return True
     return False
 
@@ -154,8 +163,8 @@ def is_valid(word, row):
 # print(gen_possible_words(permutate_hand(hand)))'
 # a = ['.']*10
 # hand = ["a", "b", "n", "c", "w", "a", "d"]
-hand = ["x"]
-ls2 = ["a", "n", "b", "a", "n", ".", ".", ".", ".", ".","."]
+hand = ["p", "a", "a"]
+ls2 = ["a", "a", "a", "a", ".", "a", ".", ".", ".", ".","."]
 hand2 = new_hand(hand, ls2)
 ls = ["b", ".", "x", ".", ".", ".", ".", "a", ".", "a"]
 # b = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
@@ -165,7 +174,7 @@ word_list = gen_possible_words(permutate_hand(hand2))
 print(word_list)
 g = []
 for word in word_list:
-    if is_valid(word, ls2):
+    if is_valid(word, ls2, hand):
         g.append(word)
         print(word)
 
