@@ -1,5 +1,5 @@
 import string
-from itertools import permutations
+from itertools import permutations, combinations
 
 # Hej välkommen
 # bla bla bla
@@ -8,23 +8,25 @@ from itertools import permutations
 
 ################################
 dictionary = "SAOL13_AND_14.txt"
+valid_words = set()
+with open (dictionary, "r") as f:
+    for line in f:
+         word = line.strip().lower()
+         valid_words.add(word)
+        
 
 best_word = ""
 max_points = 0
 
-letters = list(string.ascii_lowercase) + ['å','ä','ö']
-
 board = [
-    [' ', 'e', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', 'c', ' ', ' ', ' '],
-    [' ', ' ', ' ', 'b', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', ' ', ' '],
-    [' ', ' ', ' ', ' ', 'a', ' ']
+    ['.', 'e', '.', '.', '.', '.'],
+    ['.', '.', '.', '.', '.', '.'],
+    ['.', '.', 'c', '.', '.', '.'],
+    ['.', '.', '.', 'b', '.', '.'],
+    ['.', '.', '.', '.', '.', '.'],
+    ['.', '.', '.', '.', '.', '.'],
+    ['.', '.', '.', '.', 'a', '.']
 ]
-
-# hand = random.sample(letters, 7)
 
 wordfeud_points = {
     'a': 1,
@@ -57,10 +59,7 @@ wordfeud_points = {
     'ä': 4,
     'ö': 4
 }
-
-# print(letters)
-# print(board)
-# print(hand)
+###################################
 
 # creates a new hand with the letters from a given row
 def new_hand(hand, row):
@@ -71,11 +70,17 @@ def new_hand(hand, row):
             new_hand.append(c)
     return new_hand
 
+##########################################################
+##########################################################
 # rotate board clockwise and counter clockwise
+##########################################################
+##########################################################
 def rotate_clock(board):
     return list(list(row) for row in zip(*board[::-1]))
 def rotate_counter(board):
     return (list(list(row) for row in zip(*board)))[::-1]
+##########################################################
+##########################################################
 
 # Checks how much points a word is worth with regards to only letters
 def word_points(word):
@@ -85,34 +90,37 @@ def word_points(word):
 
     return points
 
-
-# takes a hand and generates all possible permutaions in a list
-def permutate_hand(hand):
-    perms = []
-    for i in range(2, len(hand)+1):
-        for w in permutations(hand, i):
-            perms.append(''.join(w))
-    return perms
-
-# checks which perms are an actual word and returns a list with those words
-def gen_possible_words(perms):
-    # set for removing duplicates
+# mycket bättre för minnet
+def gen_words_hand(hand2):
     words = set()
-    with open (dictionary, "r", encoding="utf-8") as f:
-        # set because its faster to search through
-        valid_words = set(line.strip() for line in f)
-    for w in perms:
-        if w in valid_words:
-            words.add(w)
-    return words
+    for i in range(2, len(hand2)+1):
+        for combo in combinations(hand2, i):
+            for perms in permutations(combo):
+                word = ''.join(perms)
+                if word in valid_words:
+                    # words.add(word)
+                    yield word
+
+
+#####################################
+#####################################
+#####################################
+# Helper functions to is_valid()
+#####################################
+#####################################
+#####################################
 
 # Sätter igop ett ord och en rad
 def merge_row(word_row, row):
     return [x if (x != '.' or y == '.') else y for x, y in zip(word_row, row)]
 
 
-# Helper functions to is_valid()
-
+# Generar alla möjliga rader såhära: 
+# ["o", "r", "d", "e", "t", ".", ".", ".", "."]
+# [".", "o", "r", "d", "e", "t", ".", ".", "."]
+# [".", ".", "o", "r", "d", "e", "t", ".", "."]
+# [".", ".", ".", "o", "r", "d", "e", "t", "."]
+# [".", ".", ".", ".", "o", "r", "d", "e", "t"]
 def generate_possibilities(word, row):
     possibilities = []
     for i in range(len(row)-len(word)+1):
@@ -120,12 +128,14 @@ def generate_possibilities(word, row):
             possibilities.append(new_word)
     return possibilities
 
+# Kollar så att en possibility och en rad inte har överlappande bokstäver som inte är samma bokstav
 def check_no_letter_collision(possibility, row):
     for x, y in zip(possibility, row): 
             if (y != '.' and x != '.') and x != y:
                 return False
     return True
 
+# kollar så att en bokstav som finns i mereged row men inte i row måste komma från handen
 def check_letters_ok(row, merged_row, hand):
     hand_copy = hand.copy()
     for old, new in zip(row, merged_row):
@@ -136,6 +146,7 @@ def check_letters_ok(row, merged_row, hand):
                 return False
     return True
 
+# kollar så att ordet inte ligger precis brevid en annan bokstav i radenbrädet
 def check_next_letter(possibility, word, row):
     start_of_word = possibility.index(word[0])
     end_of_word = start_of_word + len(word) - 1
@@ -143,6 +154,10 @@ def check_next_letter(possibility, word, row):
         return False
     return True
 
+#####################################
+#####################################
+#####################################
+#####################################
 
 
 def is_valid(word, row, hand): 
@@ -161,30 +176,59 @@ def is_valid(word, row, hand):
         # print(possibility)
         # print(row)
         # print(merged_row)
+        print(word)
+        print(word_points(word))
 
         return True
     return False
 
-print(is_valid("hepp", ['.','.','.','.'], ["h", "j", "p", "e"]))
 
-# 1️⃣ Simple fit — should be True
-print(is_valid("aba", ['.','.','a','.','.'], ["a","a","b"]))  # True
 
-# 2️⃣ Not enough letters — should be False
-print(is_valid("aaa", ['.','.','a','.','.'], ["a","a","b"]))  # True
+##########################################################
+###### Test grejer #######################################
+##########################################################
+# print(is_valid("hepp", ['.','.','.','.'], ["h", "j", "p", "e"]))
+#
+# # 1️⃣ Simple fit — should be True
+# print(is_valid("aba", ['.','.','a','.','.'], ["a","a","b"]))  # True
+#
+# # 2️⃣ Not enough letters — should be False
+# print(is_valid("aaa", ['.','.','a','.','.'], ["a","a","b"]))  # True
+#
+# # 3️⃣ Wrong letter conflict — should be False
+# print(is_valid("dog", ['.','c','.','.','.'], ["d","o","g"]))  # False
+#
+# # 4️⃣ Adjacent letter conflict — should be False
+# print(is_valid("he", ['a','.','.','.','.'], ["h","e"]))  # True
+#
+# # 5️⃣ Perfect match with row letters — should be True
+# print(is_valid("cab", ['c','.','a','.','b'], ["x","y","z"]))  # False
+#
+# # 6️⃣ Empty row, exact hand letters — should be True
+# print(is_valid("hepp", ['.','.','.','.'], ["h","e","p","p"]))  # True
+#
+# # 7️⃣ Empty row, missing one letter — should be False
+# print(is_valid("hepp", ['.','.','.','.'], ["h","e","p"]))  # False
+##########################################################
+##########################################################
+##########################################################
+# row = ['.', '.', '.', 'k', 'a', 't', 't', '.', '.', '.']
+hand = ['e', 'r', 's', 'a', 'l', 'o', 'p']
 
-# 3️⃣ Wrong letter conflict — should be False
-print(is_valid("dog", ['.','c','.','.','.'], ["d","o","g"]))  # False
+# hand2 = new_hand(hand, row)
+#
+# for word in gen_possible_words(permutate_hand(hand2)):
+#     is_valid(word, row, hand)
+print("hej")
 
-# 4️⃣ Adjacent letter conflict — should be False
-print(is_valid("he", ['a','.','.','.','.'], ["h","e"]))  # True
+for row in board:
+    
+    hand2 = new_hand(hand, row)
 
-# 5️⃣ Perfect match with row letters — should be True
-print(is_valid("cab", ['c','.','a','.','b'], ["x","y","z"]))  # False
+    for word in gen_words_hand(hand2):
+        if is_valid(word, row, hand) and word_points(word) > max_points:
+            best_word = word
+            max_points = word_points(word)
 
-# 6️⃣ Empty row, exact hand letters — should be True
-print(is_valid("hepp", ['.','.','.','.'], ["h","e","p","p"]))  # True
-
-# 7️⃣ Empty row, missing one letter — should be False
-print(is_valid("hepp", ['.','.','.','.'], ["h","e","p"]))  # False
-
+print(best_word)            
+print(max_points)
