@@ -111,71 +111,58 @@ def merge_row(word_row, row):
     return [x if (x != '.' or y == '.') else y for x, y in zip(word_row, row)]
 
 
-# Kollar så att ett ord inte anvönder sig av bokstäver från raden om samma bokstäver inte är på samma plats
-# def check_letter_amount()
+# Helper functions to is_valid()
 
-
-# Exprimeterade lite....
-def is_valid(word, row, hand):
+def generate_possibilities(word, row):
     possibilities = []
-    fits = True
-    # Generates list in the form
-# ["w", "o", "r", "d", ".", ".", ".", ".", ".", "."]
-# [".", "w", "o", "r", "d", ".", ".", ".", ".", "."]
-# [".", ".", "w", "o", "r", "d", ".", ".", ".", "."]
-#        ...
-#    ...
-# [".", ".", ".", ".", ".", ".", "w", "o", "r", "d"]
     for i in range(len(row)-len(word)+1):
-        new_word = ['.']*i + list(word) + ['.']*(len(row)-len(word)-i)
-        possibilities.append(new_word)
-# checks if these lists align with the row
-    for w in possibilities:
-        merged_row = merge_row(w, row)
-        fits = True
-        for x, y in zip(w, row):
-            # print(x==y,x ,y)
+            new_word = ['.']*i + list(word) + ['.']*(len(row)-len(word)-i)
+            possibilities.append(new_word)
+    return possibilities
+
+def check_no_letter_collision(possibility, row):
+    for x, y in zip(possibility, row): 
             if (y != '.' and x != '.') and x != y:
-                fits = False
-                break
-            # Kollar så att ordet inte använder sig av bokstäver från raden på fel plats.
-            # behöver fixa
+                return False
+    return True
 
-        for letter in merged_row:
-            if letter not in hand:
-                if row.count(letter) != merged_row.count(letter): 
-                    fits = False
-                    break
-            # Kollar att att celler brevid ordet är tomma eller början/slut av en rad
-        if fits:
-            start_of_word = w.index(word[0])
-            end_of_word = start_of_word + len(word) - 1
-            if (start_of_word >= 1 and row[start_of_word - 1] != '.') or (end_of_word < len(row) - 1 and row[end_of_word + 1] != '.'):
-                continue
-            print(w)
-            print(row)
-            print(merge_row(w, row))
+def check_letters_ok(row, merged_row, hand):
+    hand_copy = hand.copy()
+    for old, new in zip(row, merged_row):
+        if old == '.' and new != '.':
+            if new in hand_copy:
+                hand_copy.remove(new)
+            else:
+                return False
+    return True
 
-            return True
+def check_next_letter(possibility, word, row):
+    start_of_word = possibility.index(word[0])
+    end_of_word = start_of_word + len(word) - 1
+    if (start_of_word >= 1 and row[start_of_word - 1] != '.') or (end_of_word < len(row) - 1 and row[end_of_word + 1] != '.'):
+        return False
+    return True
+
+
+
+def is_valid(word, row, hand): 
+    for possibility in generate_possibilities(word, row):
+        merged_row = merge_row(possibility, row)
+        
+        if not check_no_letter_collision(possibility, row):
+            continue
+
+        if not check_letters_ok(row, merged_row, hand):
+            continue
+
+        if not check_next_letter(possibility, word, row):
+            continue
+
+        print(possibility)
+        print(row)
+        print(merged_row)
+
+        return True
     return False
 
-# print(gen_possible_words(permutate_hand(hand)))
-# print(gen_possible_words(permutate_hand(hand)))'
-# a = ['.']*10
-# hand = ["a", "b", "n", "c", "w", "a", "d"]
-hand = ["p", "a", "a"]
-ls2 = ["a", "a", "a", "a", ".", "a", ".", ".", ".", ".","."]
-hand2 = new_hand(hand, ls2)
-ls = ["b", ".", "x", ".", ".", ".", ".", "a", ".", "a"]
-# b = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
-# print(is_valid("hej", b))
-#
-word_list = gen_possible_words(permutate_hand(hand2))
-print(word_list)
-g = []
-for word in word_list:
-    if is_valid(word, ls2, hand):
-        g.append(word)
-        print(word)
-
-print(hand2)
+print(is_valid("hepp", ['.','.','.','.'], ["h", "j", "p", "e"]))
