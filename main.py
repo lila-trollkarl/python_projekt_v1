@@ -158,11 +158,33 @@ def is_valid(word, row, hand):
         if not check_next_letter(possibility, word, row):
             continue
 
-        print(possibility)
-        print(row)
-        print(merged_row)
+        # print(possibility)
+        # print(row)
+        # print(merged_row)
 
         return True
     return False
 
 print(is_valid("hepp", ['.','.','.','.'], ["h", "j", "p", "e"]))
+
+# 1️⃣ Simple fit — should be True
+print(is_valid("aba", ['.','.','a','.','.'], ["a","a","b"]))  # True
+
+# 2️⃣ Not enough letters — should be False
+print(is_valid("aaa", ['.','.','a','.','.'], ["a","a","b"]))  # True
+
+# 3️⃣ Wrong letter conflict — should be False
+print(is_valid("dog", ['.','c','.','.','.'], ["d","o","g"]))  # False
+
+# 4️⃣ Adjacent letter conflict — should be False
+print(is_valid("he", ['a','.','.','.','.'], ["h","e"]))  # True
+
+# 5️⃣ Perfect match with row letters — should be True
+print(is_valid("cab", ['c','.','a','.','b'], ["x","y","z"]))  # False
+
+# 6️⃣ Empty row, exact hand letters — should be True
+print(is_valid("hepp", ['.','.','.','.'], ["h","e","p","p"]))  # True
+
+# 7️⃣ Empty row, missing one letter — should be False
+print(is_valid("hepp", ['.','.','.','.'], ["h","e","p"]))  # False
+
