@@ -18,16 +18,27 @@ with open (dictionary, "r") as f:
 best_word = ""
 max_points = 0
 
+# board = [
+#     ['.', 'e', '.', '.', '.', '.'],
+#     ['.', '.', '.', '.', '.', '.'],
+#     ['.', '.', 'c', '.', '.', '.'],
+#     ['.', '.', '.', 'b', '.', '.'],
+#     ['.', '.', '.', '.', '.', '.'],
+#     ['.', '.', '.', '.', '.', '.'],
+#     ['.', '.', '.', '.', 'a', '.']
+# ]
+
+
 board = [
-    ['.', 'e', '.', '.', '.', '.'],
     ['.', '.', '.', '.', '.', '.'],
-    ['.', '.', 'c', '.', '.', '.'],
-    ['.', '.', '.', 'b', '.', '.'],
+    ['.', 's', '.', '.', '.', '.'],
     ['.', '.', '.', '.', '.', '.'],
+    ['.', '.', 'k', '.', '.', '.'],
     ['.', '.', '.', '.', '.', '.'],
-    ['.', '.', '.', '.', 'a', '.']
+    ['.', '.', '.', '.', '.', '.']
 ]
 
+hand = ['a', 't', 'e', 'r', 'n', 'o', 'l']
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -154,13 +165,30 @@ def check_next_letter(possibility, word, row):
         return False
     return True
 
+# Check if word in row is next to letters inother rows, and if it is, make sure that new text is also a word
+def check_other_rows(merged_row,row, ind):
+    new_letters = [x if x != '.' and y == '.' else y for x, y in zip(merged_row, row)]
+    board[ind] = new_letters
+    for i in range(len(new_letters)):
+        if new_letters[i] != '.':
+            col = [row[i] for row in board]
+            new_texts = ''.join(col).split('.')
+            for word in new_texts:
+                if len(word) >= 2:
+                    if word not in valid_words:
+                        board[ind] = row
+                        return False
+    board[ind] = row
+    return True
+
+
 #####################################
 #####################################
 #####################################
 #####################################
 
 
-def is_valid(word, row, hand): 
+def is_valid(word, row, hand, ind): 
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -171,6 +199,9 @@ def is_valid(word, row, hand):
             continue
 
         if not check_next_letter(possibility, word, row):
+            continue
+
+        if not check_other_rows(merged_row, row, ind):
             continue
 
         # print(possibility)
@@ -212,23 +243,21 @@ def is_valid(word, row, hand):
 ##########################################################
 ##########################################################
 ##########################################################
-# row = ['.', '.', '.', 'k', 'a', 't', 't', '.', '.', '.']
-hand = ['e', 'r', 's', 'a', 'l', 'o', 'p']
 
-# hand2 = new_hand(hand, row)
-#
-# for word in gen_possible_words(permutate_hand(hand2)):
-#     is_valid(word, row, hand)
 print("hej")
 
-for row in board:
-    
-    hand2 = new_hand(hand, row)
+for _ in range(2):
+    for ind, row in enumerate(board):
+        
+        hand2 = new_hand(hand, row)
 
-    for word in gen_words_hand(hand2):
-        if is_valid(word, row, hand) and word_points(word) > max_points:
-            best_word = word
-            max_points = word_points(word)
+        for word in gen_words_hand(hand2):
+            if is_valid(word, row, hand, ind) and word_points(word) > max_points:
+                best_word = word
+                max_points = word_points(word)
+    # board = rotate_counter(board)
+    board = [list(row) for row in zip(*board)]
+
 
 print(best_word)            
 print(max_points)
