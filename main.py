@@ -1,5 +1,6 @@
 import string
 from itertools import permutations, combinations
+import copy
 
 # Hej välkommen
 # bla bla bla
@@ -29,16 +30,27 @@ max_points = 0
 # ]
 
 
-board = [
-    ['.', '.', '.', '.', '.', '.'],
-    ['.', 's', '.', '.', '.', '.'],
-    ['.', '.', '.', '.', '.', '.'],
-    ['.', '.', 'k', '.', '.', '.'],
-    ['.', '.', '.', '.', '.', '.'],
-    ['.', '.', '.', '.', '.', '.']
-]
 
-hand = ['a', 't', 'e', 'r', 'n', 'o', 'l']
+
+board = [
+['.', '.', 'j', 'a', 'k', 't', 'e', 'r', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'g', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'l', 'y', 's', 't', 'r', 'a', 'd', 'e'],
+['.', '.', '.', '.', '.', '.', '.', 'a', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 's', 'l', 'e', 'm', 'm', 'a', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
+] 
+# hand = ['a', 't', 'e', 'r', 'n', 'o', 'l']
+hand = ["b", "e", "t", "a", "s", "e", "s"]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -75,7 +87,7 @@ wordfeud_points = {
 # creates a new hand with the letters from a given row
 def new_hand(hand, row):
     # copy to avoid just making a reference
-    new_hand = hand.copy()
+    new_hand = copy.deepcopy(hand)
     for c in row:
         if c != '.':
             new_hand.append(c)
@@ -166,19 +178,18 @@ def check_next_letter(possibility, word, row):
     return True
 
 # Check if word in row is next to letters inother rows, and if it is, make sure that new text is also a word
-def check_other_rows(merged_row,row, ind):
+def check_other_rows(merged_row, row, ind):
     new_letters = [x if x != '.' and y == '.' else y for x, y in zip(merged_row, row)]
-    board[ind] = new_letters
+    temp_board = copy.deepcopy(board)
+    temp_board[ind] = new_letters
     for i in range(len(new_letters)):
         if new_letters[i] != '.':
-            col = [row[i] for row in board]
+            col = [row[i] for row in temp_board]
             new_texts = ''.join(col).split('.')
             for word in new_texts:
                 if len(word) >= 2:
                     if word not in valid_words:
-                        board[ind] = row
                         return False
-    board[ind] = row
     return True
 
 
@@ -202,7 +213,7 @@ def is_valid(word, row, hand, ind):
             continue
 
         if not check_other_rows(merged_row, row, ind):
-            continue
+            continue 
 
         # print(possibility)
         # print(row)
@@ -250,7 +261,7 @@ for _ in range(2):
     for ind, row in enumerate(board):
         
         hand2 = new_hand(hand, row)
-
+        print(f"Checking row {ind} with hand {hand2}")
         for word in gen_words_hand(hand2):
             if is_valid(word, row, hand, ind) and word_points(word) > max_points:
                 best_word = word
