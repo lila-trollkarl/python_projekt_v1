@@ -255,7 +255,7 @@ for _ in range(2):
             if len(word) < 2 or len(word) > len(row):
                 continue
             if can_make_word(word, letters):
-                if is_valid(word, row, hand, ind):
+                if is_valid(word, row, letters, ind):
                     if word_points(word) > max_points:
 
                         best_word = word
