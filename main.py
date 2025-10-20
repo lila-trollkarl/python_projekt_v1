@@ -75,17 +75,6 @@ wordfeud_points = {
     'ä': 4,
     'ö': 4
 }
-###################################
-
-# creates a new hand with the letters from a given row
-def new_hand(hand, row):
-    # copy to avoid just making a reference
-    new_hand = copy.deepcopy(hand)
-    for c in row:
-        if c != '.':
-            new_hand.append(c)
-    return new_hand
-
 ##########################################################
 
 # Checks how much points a word is worth with regards to only letters
@@ -188,7 +177,7 @@ def check_other_rows(merged_row, row, ind):
 #####################################
 
 
-def is_valid(word, row, hand, ind): 
+def is_valid(word, row, ind): 
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -209,8 +198,10 @@ def is_valid(word, row, hand, ind):
         # print(merged_row)
         # print(word)
         # print(word_points(word))
+        r = ind
+        c = possibility.index(word[0])
 
-        return True
+        return True, (r, c)
     return False
 
 
@@ -255,7 +246,7 @@ for _ in range(2):
             if len(word) < 2 or len(word) > len(row):
                 continue
             if can_make_word(word, letters):
-                if is_valid(word, row, letters, ind):
+                if is_valid(word, row, ind):
                     if word_points(word) > max_points:
 
                         best_word = word
