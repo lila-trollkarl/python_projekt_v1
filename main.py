@@ -1,6 +1,7 @@
 import string
 from itertools import permutations, combinations
 import copy
+from collections import Counter
 
 # Hej välkommen
 # bla bla bla
@@ -19,16 +20,8 @@ with open (dictionary, "r") as f:
 best_word = ""
 max_points = 0
 
-# board = [
-#     ['.', 'e', '.', '.', '.', '.'],
-#     ['.', '.', '.', '.', '.', '.'],
-#     ['.', '.', 'c', '.', '.', '.'],
-#     ['.', '.', '.', 'b', '.', '.'],
-#     ['.', '.', '.', '.', '.', '.'],
-#     ['.', '.', '.', '.', '.', '.'],
-#     ['.', '.', '.', '.', 'a', '.']
-# ]
-
+ 
+#
 
 
 
@@ -94,16 +87,6 @@ def new_hand(hand, row):
     return new_hand
 
 ##########################################################
-##########################################################
-# rotate board clockwise and counter clockwise
-##########################################################
-##########################################################
-def rotate_clock(board):
-    return list(list(row) for row in zip(*board[::-1]))
-def rotate_counter(board):
-    return (list(list(row) for row in zip(*board)))[::-1]
-##########################################################
-##########################################################
 
 # Checks how much points a word is worth with regards to only letters
 def word_points(word):
@@ -136,6 +119,12 @@ def gen_words_hand(hand2):
 # Sätter igop ett ord och en rad
 def merge_row(word_row, row):
     return [x if (x != '.' or y == '.') else y for x, y in zip(word_row, row)]
+
+
+def can_make_word(word, letters):
+    need = Counter(word)
+    return not (need - Counter(letters))
+
 
 
 # Generar alla möjliga rader såhära: 
@@ -218,8 +207,8 @@ def is_valid(word, row, hand, ind):
         # print(possibility)
         # print(row)
         # print(merged_row)
-        print(word)
-        print(word_points(word))
+        # print(word)
+        # print(word_points(word))
 
         return True
     return False
@@ -260,12 +249,17 @@ print("hej")
 for _ in range(2):
     for ind, row in enumerate(board):
         
-        hand2 = new_hand(hand, row)
-        print(f"Checking row {ind} with hand {hand2}")
-        for word in gen_words_hand(hand2):
-            if is_valid(word, row, hand, ind) and word_points(word) > max_points:
-                best_word = word
-                max_points = word_points(word)
+        letters = hand + [c for c in row if c != '.']
+
+        for word in valid_words:
+            if len(word) < 2 or len(word) > len(row):
+                continue
+            if can_make_word(word, letters):
+                if is_valid(word, row, hand, ind):
+                    if word_points(word) > max_points:
+
+                        best_word = word
+                        max_points = word_points(word)
     # board = rotate_counter(board)
     board = [list(row) for row in zip(*board)]
 
