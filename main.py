@@ -1,6 +1,4 @@
-import string
 from itertools import permutations, combinations
-import copy
 from collections import Counter
 
 # Hej välkommen
@@ -19,12 +17,29 @@ with open (dictionary, "r") as f:
 
 best_word = ""
 max_points = 0
-
- 
+position = (None, None)
+direction = "hehe" 
 #
 
 
 
+multiplier_board = [
+['TB', '.', '.', '.', 'TO', '.', '.', 'DB', '.', '.', 'TO', '.', '.', '.', 'TB'],
+['.', 'DB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'DB', '.'],
+['.', '.', 'DO', '.', '.', '.', 'DB', '.', 'DB', '.', '.', '.', 'DO', '.', '.'],
+['.', '.', '.', 'TB', '.', '.', '.', 'DO', '.', '.', '.', 'TB', '.', '.', '.'],
+['TO', '.', '.', '.', 'DO', '.', 'DB', '.', 'DB', '.', 'DO', '.', '.', '.', 'TO'],
+['.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.'],
+['.', '.', 'DB', '.', 'DB', '.', '.', '.', '.', '.', 'DB', '.', 'DB', '.', '.'],
+['DB', '.', '.', 'DO', '.', '.', '.', '.', '.', '.', '.', 'DO', '.', '.', 'DB'],
+['.', '.', 'DB', '.', 'DB', '.', '.', '.', '.', '.', 'DB', '.', 'DB', '.', '.'],
+['.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.'],
+['TO', '.', '.', '.', 'DO', '.', 'DB', '.', 'DB', '.', 'DO', '.', '.', '.', 'TO'],
+['.', '.', '.', 'TB', '.', '.', '.', 'DO', '.', '.', '.', 'TB', '.', '.', '.'],
+['.', '.', 'DO', '.', '.', '.', 'DB', '.', 'DB', '.', '.', '.', 'DO', '.', '.'],
+['.', 'DB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'DB', '.'],
+['TB', '.', '.', '.', 'TO', '.', '.', 'DB', '.', '.', 'TO', '.', '.', '.', 'TB'],
+] 
 board = [
 ['.', '.', 'j', 'a', 'k', 't', 'e', 'r', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
@@ -78,23 +93,23 @@ wordfeud_points = {
 ##########################################################
 
 # Checks how much points a word is worth with regards to only letters
-def word_points(word):
+def individual_word_points(word):
     points = 0
     for letter in word:
         points += wordfeud_points[letter]
 
     return points
 
-# mycket bättre för minnet
-def gen_words_hand(hand2):
-    words = set()
-    for i in range(2, len(hand2)+1):
-        for combo in combinations(hand2, i):
-            for perms in permutations(combo):
-                word = ''.join(perms)
-                if word in valid_words:
-                    # words.add(word)
-                    yield word
+# # mycket bättre för minnet
+# def gen_words_hand(hand2):
+#     words = set()
+#     for i in range(2, len(hand2)+1):
+#         for combo in combinations(hand2, i):
+#             for perms in permutations(combo):
+#                 word = ''.join(perms)
+#                 if word in valid_words:
+#                     # words.add(word)
+#                     yield word
 
 
 #####################################
@@ -158,7 +173,7 @@ def check_next_letter(possibility, word, row):
 # Check if word in row is next to letters inother rows, and if it is, make sure that new text is also a word
 def check_other_rows(merged_row, row, ind):
     new_letters = [x if x != '.' and y == '.' else y for x, y in zip(merged_row, row)]
-    temp_board = copy.deepcopy(board)
+    temp_board = [row.copy() for row in board]
     temp_board[ind] = new_letters
     for i in range(len(new_letters)):
         if new_letters[i] != '.':
@@ -169,6 +184,29 @@ def check_other_rows(merged_row, row, ind):
                     if word not in valid_words:
                         return False
     return True
+
+
+# Kollar så att ordet inte bara ligger helt själv
+def check_loneliness(possibility, row, ind):
+
+# ------ kollar så att minst en bokstav överlappar i possibility och row --- #
+    for x, y in zip(possibility, row):
+        if x != '.' and y != '.':
+            return False
+    
+# ------ kollar så att det finns minst en bokstav över eller under --------- #
+    for index, c in enumerate(possibility):
+        if c == '.':
+            continue
+        over = board[ind - 1][index] if ind >= 1 else '.' 
+        under = board[ind + 1][index] if ind < len(board)-1 else '.'
+
+        if over != '.' or under != '.':
+            return False
+    
+
+    return True
+
 
 
 #####################################
@@ -189,6 +227,9 @@ def is_valid(word, row, ind):
 
         if not check_next_letter(possibility, word, row):
             continue
+        
+        if check_loneliness(possibility, row, ind):
+            continue
 
         if not check_other_rows(merged_row, row, ind):
             continue 
@@ -197,12 +238,12 @@ def is_valid(word, row, ind):
         # print(row)
         # print(merged_row)
         # print(word)
-        # print(word_points(word))
+        # print(individual_word_points(word))
         r = ind
         c = possibility.index(word[0])
 
         return True, (r, c)
-    return False
+    return False, (0, 0)
 
 
 
@@ -237,23 +278,39 @@ def is_valid(word, row, ind):
 
 print("hej")
 
-for _ in range(2):
-    for ind, row in enumerate(board):
+def main_function(grid, dir):
+    global max_points
+    global best_word
+    global position
+    global direction
+    for ind, row in enumerate(grid):
         
         letters = hand + [c for c in row if c != '.']
 
         for word in valid_words:
-            if len(word) < 2 or len(word) > len(row):
+            if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                if is_valid(word, row, ind):
-                    if word_points(word) > max_points:
+                valid, (r, c) = is_valid(word, row, ind)
+                if valid:
+                    
+                    if individual_word_points(word) > max_points:
 
                         best_word = word
-                        max_points = word_points(word)
-    # board = rotate_counter(board)
-    board = [list(row) for row in zip(*board)]
+                        max_points = individual_word_points(word)
+                        position = (r, c) if dir == "right" else (c, r)
+                        direction = dir
+
+    
+main_function(board, "right")
+transpose_board = [list(row) for row in zip(*board)]
+main_function(transpose_board, "down")
+
+
+
 
 
 print(best_word)            
 print(max_points)
+print(position)
+print(direction)
