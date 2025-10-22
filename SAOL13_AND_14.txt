@@ -42,7 +42,7 @@
 -skalig
 -slagare
 -spaltig
--stammig
+-stemmig
 -stavig
 -stämmig
 -synt

@@ -1,3 +1,12 @@
+#### BEHLVER LÄGGA TILL"""""transpose_multiplier_board
+
+# så att valid_words inte returnerar på en gång utan kolla alla giltiga positioner
+#
+# att move score endast ska ta hänsyn till dem nya bokstäverna som har lagts och inte "ordet", kanske genom, att skicka in en lista av tuples i formen(bokstav, position)
+
+
+
+
 from itertools import permutations, combinations
 from collections import Counter
 
@@ -9,7 +18,7 @@ from collections import Counter
 ################################
 dictionary = "SAOL13_AND_14.txt"
 valid_words = set()
-with open (dictionary, "r") as f:
+with open (dictionary, "r", encoding="utf-8") as f:
     for line in f:
          word = line.strip().lower()
          valid_words.add(word)
@@ -20,7 +29,6 @@ max_points = 0
 position = (None, None)
 direction = "hehe" 
 #
-
 
 
 multiplier_board = [
@@ -40,24 +48,43 @@ multiplier_board = [
 ['.', 'DB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'DB', '.'],
 ['TB', '.', '.', '.', 'TO', '.', '.', 'DB', '.', '.', 'TO', '.', '.', '.', 'TB'],
 ] 
+transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-['.', '.', 'j', 'a', 'k', 't', 'e', 'r', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', 'v', 'ä', 'k', 't', 'a', 'r', 'e', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'g', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'l', 'y', 's', 't', 'r', 'a', 'd', 'e'],
-['.', '.', '.', '.', '.', '.', '.', 'a', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 's', 'l', 'e', 'm', 'm', 'a', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'f', 'y', 's', 'i', 's', 'k', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'g', 'l', 'ö', 'm', 's', 'k', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'e', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'r', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
-] 
-# hand = ['a', 't', 'e', 'r', 'n', 'o', 'l']
+]
+
+def word_list(board):
+    words = []
+
+    # finds left to right words
+    for row in board:
+        for word in ''.join(row).split('.'):
+            if len(word) >=2 and word in valid_words:
+                words.append(word)
+
+    # finds words vertically
+    for col in [list(row) for row in zip(*board)]:
+        for word in ''.join(col).split('.'):
+            if len(word) >=2 and word in valid_words:
+                words.append(word)
+    return words
+
+board_words= word_list(board)
+
 hand = ["b", "e", "t", "a", "s", "e", "s"]
 wordfeud_points = {
     'a': 1,
@@ -93,32 +120,71 @@ wordfeud_points = {
 ##########################################################
 
 # Checks how much points a word is worth with regards to only letters
-def individual_word_points(word):
+def word_score(word):
     points = 0
     for letter in word:
         points += wordfeud_points[letter]
 
     return points
 
-# # mycket bättre för minnet
-# def gen_words_hand(hand2):
-#     words = set()
-#     for i in range(2, len(hand2)+1):
-#         for combo in combinations(hand2, i):
-#             for perms in permutations(combo):
-#                 word = ''.join(perms)
-#                 if word in valid_words:
-#                     # words.add(word)
-#                     yield word
+
+def move_score(word, pos, dir, m_board):
+    new_board = [row[:] for row in board]
+    total_points = 0
+    r, c = pos
+    multiplier = 1
+    
+    # ---- lägger in ordet i nya brädet --- #
+    if dir == "right":
+        for i in range(len(word)):
+            new_board[r][c+i] = word[i]
+# kollar om ordet hamnar på poängbreicka _-------------#
+            if m_board[r][c+i] != '.':
+                if m_board[r][c+i] == "TO":
+                    multiplier *= 3
+                elif m_board[r][c+i] == "DO":
+                    multiplier *= 2
+                elif m_board[r][c+i] == "DB":
+                    total_points += wordfeud_points[word[i]]
+                elif m_board[r][c+i] == "TB":
+                    total_points += wordfeud_points[word[i]]*2
+
+    elif dir == "down":
+        for j in range(len(word)):
+            new_board[r+j][c] = word[j]
+
+            if m_board[r+j][c] != '.':
+                if m_board[r+j][c] == "TO":
+                    multiplier *= 3
+                elif m_board[r+j][c] == "DO":
+                    multiplier *= 2
+                elif m_board[r+j][c] == "DB":
+                    total_points += wordfeud_points[word[j]]*2
+                elif m_board[r+j][c] == "TB":
+                    total_points += wordfeud_points[word[j]]*3
+    
+
+    # ---- skapar en lista med alla ord i det nya brädet ---#
+    new_board_word_list = word_list(new_board)
+    new_words = []
+    # ---- kollar vilka ord som är helt nya --- #
+    for w in new_board_word_list:
+        if w not in board_words:
+            new_words.append(w)
+
+    print(new_words)
+    total_points += multiplier * word_score(word)
+    for word in new_words:
+        total_points += word_score(word)
+
+    return total_points
 
 
-#####################################
-#####################################
-#####################################
-# Helper functions to is_valid()
-#####################################
-#####################################
-#####################################
+
+
+
+
+# -------------------- helper functions ----------------------------------- # 
 
 # Sätter igop ett ord och en rad
 def merge_row(word_row, row):
@@ -131,12 +197,15 @@ def can_make_word(word, letters):
 
 
 
-# Generar alla möjliga rader såhära: 
-# ["o", "r", "d", "e", "t", ".", ".", ".", "."]
-# [".", "o", "r", "d", "e", "t", ".", ".", "."]
-# [".", ".", "o", "r", "d", "e", "t", ".", "."]
-# [".", ".", ".", "o", "r", "d", "e", "t", "."]
-# [".", ".", ".", ".", "o", "r", "d", "e", "t"]
+# ------------------- Generates "possibilitys" in this way -------------#
+
+# ["o", "r", encoding="utf-8", "d", "e", "t", ".", ".", ".", "."]
+# [".", "o", "r", encoding="utf-8", "d", "e", "t", ".", ".", "."]
+# [".", ".", "o", "r", encoding="utf-8", "d", "e", "t", ".", "."]
+# [".", ".", ".", "o", "r", encoding="utf-8", "d", "e", "t", "."]
+# [".", ".", ".", ".", "o", "r", encoding="utf-8", "d", "e", "t"]
+
+# -----------------------------------------------------------------------# 
 def generate_possibilities(word, row):
     possibilities = []
     for i in range(len(row)-len(word)+1):
@@ -144,7 +213,7 @@ def generate_possibilities(word, row):
             possibilities.append(new_word)
     return possibilities
 
-# Kollar så att en possibility och en rad inte har överlappande bokstäver som inte är samma bokstav
+# ---------- Checks that 2 overlapping letters dont differ ---------------#
 def check_no_letter_collision(possibility, row):
     for x, y in zip(possibility, row): 
             if (y != '.' and x != '.') and x != y:
@@ -238,13 +307,12 @@ def is_valid(word, row, ind):
         # print(row)
         # print(merged_row)
         # print(word)
-        # print(individual_word_points(word))
+        # print(word_score(word))
         r = ind
         c = possibility.index(word[0])
 
         return True, (r, c)
     return False, (0, 0)
-
 
 
 ##########################################################
@@ -278,7 +346,7 @@ def is_valid(word, row, ind):
 
 print("hej")
 
-def main_function(grid, dir):
+def main_function(grid, dir, m_board):
     global max_points
     global best_word
     global position
@@ -293,18 +361,19 @@ def main_function(grid, dir):
             if can_make_word(word, letters):
                 valid, (r, c) = is_valid(word, row, ind)
                 if valid:
-                    
-                    if individual_word_points(word) > max_points:
+                    pos = (r, c) if dir == "right" else (c, r)
+                    score = move_score(word, pos, dir, m_board)
+                    if score > max_points:
 
                         best_word = word
-                        max_points = individual_word_points(word)
+                        max_points = score
                         position = (r, c) if dir == "right" else (c, r)
                         direction = dir
 
     
-main_function(board, "right")
+main_function(board, "right", multiplier_board)
 transpose_board = [list(row) for row in zip(*board)]
-main_function(transpose_board, "down")
+main_function(transpose_board, "down", transpose_multiplier_board)
 
 
 
