@@ -249,32 +249,24 @@ def check_other_rows(merged_row, row, ind):
 
 
 # Kollar så att ordet inte bara ligger helt själv
-# Nu med korrekt hantering av riktning (dir)
-def check_loneliness(possibility, row, ind, dir):
-    # ------ kollar så att minst en bokstav överlappar i possibility och row --- #
+def check_loneliness(possibility, row, ind):
+
+# ------ kollar så att minst en bokstav överlappar i possibility och row --- #
     for x, y in zip(possibility, row):
         if x != '.' and y != '.':
             return False
     
+# ------ kollar så att det finns minst en bokstav över eller under --------- #
     for index, c in enumerate(possibility):
         if c == '.':
             continue
-        if dir == "right":
-            # Horisontell placering: kolla vertikalt på brädet, horisontellt i raden
-            over = board[ind - 1][index] if ind >= 1 else '.'
-            under = board[ind + 1][index] if ind < len(board) - 1 else '.'
-            left = row[index - 1] if index >= 1 else '.'
-            right = row[index + 1] if index < len(row) - 1 else '.'
-        else:  # dir == "down"
-            # Vertikal placering: kolla horisontellt på brädet, vertikalt i kolumnen
-            over = row[index - 1] if index >= 1 else '.'
-            under = row[index + 1] if index < len(row) - 1 else '.'
-            left = board[index][ind - 1] if ind >= 1 else '.'
-            right = board[index][ind + 1] if ind < len(board[0]) - 1 else '.'
+        over = board[ind - 1][index] if ind >= 1 else '.' 
+        under = board[ind + 1][index] if ind < len(board)-1 else '.'
 
-        print(f'over: {over}, under: {under}, left: {left}, right: {right}')
-        if over != '.' or under != '.' or left != '.' or right != '.':
+        if over != '.' or under != '.':
             return False
+    
+
     return True
 
 
@@ -285,8 +277,7 @@ def check_loneliness(possibility, row, ind, dir):
 #####################################
 
 
-def is_valid(word, row, ind, dir): 
-    print("checking", word, "in row", ind, "going", dir)
+def is_valid(word, row, ind): 
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -299,8 +290,7 @@ def is_valid(word, row, ind, dir):
         if not check_next_letter(possibility, word, row):
             continue
 
-        print("below problem")
-        if check_loneliness(possibility, row, ind, dir):
+        if check_loneliness(possibility, row, ind):
             continue
         if not check_other_rows(merged_row, row, ind):
             continue 
@@ -315,12 +305,12 @@ def is_valid(word, row, ind, dir):
         
         # ------------ make a move tuple ------------- #
         
-        if dir == "right":
-            move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
-        else: # dir == "down"
-            move = [(l, (i, ind)) for i, l in enumerate(merged_row)]
+
+        move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
         # remove letters that are in row
         move = [m for m, r in zip(move, row) if m[0] != r]
+
+
 
         return True, move
     return False, (None)
@@ -378,7 +368,7 @@ def main_function(grid, dir, m_board):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move = is_valid(word, row, ind, dir)
+                valid, move = is_valid(word, row, ind)
                 # checking "slatt" down, (0,8)
                 if (dir == "down" and ind == 8 and word == "slatt"):
                     print(word, "is:",valid,move)
@@ -396,10 +386,9 @@ def main_function(grid, dir, m_board):
 
     
 main_function(board, "right", multiplier_board)
-transpose_board = [list(row) for row in zip(*board)]
-main_function(transpose_board, "down", transpose_multiplier_board)
-
-
+board = [list(row) for row in zip(*board)]
+main_function(board, "down", transpose_multiplier_board)
+board = [list(row) for row in zip(*board)]
 
 
 print("==="*20)
@@ -413,6 +402,9 @@ print(best_move)
 if best_move:
     board_to_print = [row.copy() for row in board]
     for letter, (row_idx, col_idx) in best_move:
+        # Swap coordinates if the move is vertical
+        if direction == "down":
+            row_idx, col_idx = col_idx, row_idx
         if board[row_idx][col_idx] == '.':
             board_to_print[row_idx][col_idx] = f'[{letter}]'
         else:
