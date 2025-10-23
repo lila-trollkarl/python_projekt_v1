@@ -69,21 +69,38 @@ board = [
 
 def word_list(board):
     words = []
-
-    # finds left to right words
-    for row in board:
-        for word in ''.join(row).split('.'):
-            if len(word) >=2 and word in valid_words:
-                words.append(word)
-
-    # finds words vertically
-    for col in [list(row) for row in zip(*board)]:
-        for word in ''.join(col).split('.'):
-            if len(word) >=2 and word in valid_words:
-                words.append(word)
+    # Check both rows and columns in a unified way
+    for axis in ["row", "col"]:
+        if axis == "row":
+            lines = board
+        else:
+            lines = [list(col) for col in zip(*board)]
+        for idx, line in enumerate(lines):
+            joined = ''.join(line)
+            start = 0
+            while start < len(joined):
+                # Find next word
+                while start < len(joined) and joined[start] == '.':
+                    start += 1
+                end = start
+                while end < len(joined) and joined[end] != '.':
+                    end += 1
+                word = joined[start:end]
+                if len(word) >= 2 and word in valid_words:
+                    coords = []
+                    for i, letter in enumerate(word):
+                        if axis == "row":
+                            coords.append((letter, (idx, start + i)))
+                        else:
+                            coords.append((letter, (start + i, idx)))
+                    words.append(coords)
+                start = end + 1
+    # returns a list of words, where each word is a list of tuples (letter, (row, col)). This is to easily track positions of letters on the board to count points.
     return words
 
-board_words= word_list(board)
+board_words = []
+for wl in word_list(board):
+    board_words.append(''.join([letter for letter, pos in wl]))
 
 hand = ["s", "l", "a", "a", "t", "a", "t"]
 wordfeud_points = {
@@ -130,46 +147,45 @@ def word_score(word):
 
 def move_score(move, word, dir):
     new_board = [row[:] for row in board]
+    for letter, (r, c) in move:
+        new_board[r][c] = letter
     total_points = 0
-    multiplier = 1
-
-    for letter, (row, col) in move:
-        # if dir == "right":
-        new_board[row][col] = letter
-        if multiplier_board[row][col] != '.':
-            if multiplier_board[row][col] == "TO":
-                multiplier *= 3
-            if multiplier_board[row][col] == "DO":
-                multiplier *= 2
-            if multiplier_board[row][col] == "TB":
-                total_points += wordfeud_points[letter]*2
-            if multiplier_board[row][col] == "DB":
-                total_points += wordfeud_points[letter]
-        # elif dir == "down":
-        #     new_board[col][row] = letter
-        #     if multiplier_board[col][row] != '.':
-        #         if multiplier_board[col][row] == "TO":
-        #             multiplier *= 3
-        #         if multiplier_board[col][row] == "DO":
-        #             multiplier *= 2
-        #         if multiplier_board[col][row] == "TB":
-        #             total_points += wordfeud_points[letter]*2
-        #         if multiplier_board[col][row] == "DB":
-        #             total_points += wordfeud_points[letter]
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
     new_board_word_list = word_list(new_board)
     new_words = []
     # ---- kollar vilka ord som är helt nya --- #
     for w in new_board_word_list:
-        if w not in board_words:
+        clean_word = ''.join([letter for letter, pos in w])
+        if clean_word not in board_words:
             new_words.append(w)
 
-    ws = word_score(word)
-    total_points += multiplier * ws
     for w in new_words:
-        total_points += word_score(w)
-    return total_points-ws # account for couting it twice
+        word_points = 0
+        mult_word = 1
+        for letter, (r, c) in w:
+            mult = multiplier_board[r][c]
+            letter_points = wordfeud_points[letter]
+            if board[r][c] == '.': # only apply multipliers for new letters
+                if mult == 'DB':
+                    word_points += letter_points
+                elif mult == 'TB':
+                    word_points += 2 * letter_points
+                elif mult == 'DO':
+                    mult_word *= 2
+                elif mult == 'TO':
+                    mult_word *= 3
+            word_points += letter_points
+        if (word == "glana"):
+            print(f'points for {w}: {word_points * mult_word}')
+        total_points += word_points * mult_word
+
+    if (word == "glana"):
+        print(total_points)
+        input("stopp")
+        
+        
+    return total_points
 
 
 
@@ -277,6 +293,7 @@ def check_loneliness(possibility, row, ind):
 
 
 def is_valid(word, row, ind): 
+    
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -303,11 +320,11 @@ def is_valid(word, row, ind):
         c = possibility.index(word[0])
         
         # ------------ make a move tuple ------------- #
-        
 
         move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
-        # remove letters that are in row
         move = [m for m, r in zip(move, row) if m[0] != r]
+        if not move:
+            continue  # or return False, (None)
 
 
 
