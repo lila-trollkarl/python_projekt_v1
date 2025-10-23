@@ -51,16 +51,16 @@ multiplier_board = [
 ] 
 transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-['.', '.', '.', '.', '.', '.', '.', 'r', 'e', 'p', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', 'p', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'g', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'f', 'y', 's', 'i', 's', 'k', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'g', 'l', 'ö', 'm', 's', 'k', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'e', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'r', '.', '.', '.', '.', '.', '.', '.'],
+['s', 't', 'e', 'n', 'd', 'a', 'm', 'm', '.', 'l', 'u', 'n', 'g', 'a', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', 't', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', 'e', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
@@ -86,7 +86,7 @@ def word_list(board):
 
 board_words= word_list(board)
 
-hand = ["b", "e", "t", "a", "s", "e", "s"]
+hand = ["s", "l", "a", "a", "t", "a", "t"]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -279,7 +279,7 @@ def check_loneliness(possibility, row, ind):
 #####################################
 
 
-def is_valid(word, row, ind): 
+def is_valid(word, row, ind, dir): 
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -308,7 +308,10 @@ def is_valid(word, row, ind):
         
         # ------------ make a move tuple ------------- #
         
-        move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
+        if dir == "right":
+            move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
+        else: # dir == "down"
+            move = [(l, (i, ind)) for i, l in enumerate(merged_row)]
         # remove letters that are in row
         move = [m for m, r in zip(move, row) if m[0] != r]
 
@@ -370,10 +373,10 @@ def main_function(grid, dir, m_board):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move = is_valid(word, row, ind)
+                valid, move = is_valid(word, row, ind, dir)
                 if valid:
-                   score = move_score(move, word, dir)
-                   if score > max_points:
+                    score = move_score(move, word, dir)
+                    if score > max_points:
 
                         best_word = word
                         max_points = score
