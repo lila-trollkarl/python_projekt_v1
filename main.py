@@ -369,10 +369,6 @@ def main_function(grid, dir, m_board):
                 continue
             if can_make_word(word, letters):
                 valid, move = is_valid(word, row, ind)
-                # checking "slatt" down, (0,8)
-                if (dir == "down" and ind == 8 and word == "slatt"):
-                    print(word, "is:",valid,move)
-                    input("stop")
                 if valid:
                     score = move_score(move, word, dir)
                     print(f"{word} {score}")
