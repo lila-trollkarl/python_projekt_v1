@@ -51,8 +51,8 @@ multiplier_board = [
 ] 
 transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-['.', '.', 'v', 'ä', 'k', 't', 'a', 'r', 'e', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'r', 'e', 'p', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', 'p', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'g', '.', '.', '.', '.', '.', '.', '.'],
 ['.', '.', '.', '.', '.', '.', '.', 'f', 'y', 's', 'i', 's', 'k', '.', '.'],
@@ -378,6 +378,8 @@ def main_function(grid, dir, m_board):
                         best_word = word
                         max_points = score
                         best_move = move
+                        first_letter, position = best_move[0]
+                        direction = dir
 
     
 main_function(board, "right", multiplier_board)
@@ -393,3 +395,17 @@ print(max_points)
 print(position)
 print(direction)
 print(best_move)
+
+# Print the board with new letters highlighted
+if best_move:
+    board_to_print = [row.copy() for row in board]
+    for letter, (row_idx, col_idx) in best_move:
+        if board[row_idx][col_idx] == '.':
+            board_to_print[row_idx][col_idx] = f'[{letter}]'
+        else:
+            board_to_print[row_idx][col_idx] = letter
+    print("\nBoard with best move (new letters in brackets):")
+    for row in board_to_print:
+        print(' '.join(f'{c:>3}' for c in row))
+else:
+    print("No valid move found.")
