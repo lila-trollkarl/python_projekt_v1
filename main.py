@@ -176,13 +176,7 @@ def move_score(move, word, dir):
                 elif mult == 'TO':
                     mult_word *= 3
             word_points += letter_points
-        if (word == "glana"):
-            print(f'points for {w}: {word_points * mult_word}')
         total_points += word_points * mult_word
-
-    if (word == "glana"):
-        print(total_points)
-        input("stopp")
         
         
     return total_points
