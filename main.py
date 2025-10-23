@@ -51,21 +51,21 @@ multiplier_board = [
 ] 
 transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-['s', 't', 'e', 'n', 'd', 'a', 'm', 'm', '.', 'l', 'u', 'n', 'g', 'a', '.'],
-['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', 't', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', 'e', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', 't', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
+["s", "t", "e", "n", "d", "a", "m", "m", ".", "l", "u", "n", "g", "a", "."],
+[".", ".", ".", ".", ".", ".", ".", "i", ".", ".", "t", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "t", ".", ".", "e", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "t", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."]
 ]
 
 def word_list(board):
@@ -157,7 +157,6 @@ def move_score(move, word, dir):
         #             total_points += wordfeud_points[letter]*2
         #         if multiplier_board[col][row] == "DB":
         #             total_points += wordfeud_points[letter]
-           
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
     new_board_word_list = word_list(new_board)
@@ -167,12 +166,11 @@ def move_score(move, word, dir):
         if w not in board_words:
             new_words.append(w)
 
-    print(new_words)
-    total_points += multiplier * word_score(word)
+    ws = word_score(word)
+    total_points += multiplier * ws
     for w in new_words:
         total_points += word_score(w)
-
-    return total_points-word_score(word) # account for couting it twice
+    return total_points-ws # account for couting it twice
 
 
 
@@ -251,24 +249,32 @@ def check_other_rows(merged_row, row, ind):
 
 
 # Kollar så att ordet inte bara ligger helt själv
-def check_loneliness(possibility, row, ind):
-
-# ------ kollar så att minst en bokstav överlappar i possibility och row --- #
+# Nu med korrekt hantering av riktning (dir)
+def check_loneliness(possibility, row, ind, dir):
+    # ------ kollar så att minst en bokstav överlappar i possibility och row --- #
     for x, y in zip(possibility, row):
         if x != '.' and y != '.':
             return False
     
-# ------ kollar så att det finns minst en bokstav över eller under --------- #
     for index, c in enumerate(possibility):
         if c == '.':
             continue
-        over = board[ind - 1][index] if ind >= 1 else '.' 
-        under = board[ind + 1][index] if ind < len(board)-1 else '.'
+        if dir == "right":
+            # Horisontell placering: kolla vertikalt på brädet, horisontellt i raden
+            over = board[ind - 1][index] if ind >= 1 else '.'
+            under = board[ind + 1][index] if ind < len(board) - 1 else '.'
+            left = row[index - 1] if index >= 1 else '.'
+            right = row[index + 1] if index < len(row) - 1 else '.'
+        else:  # dir == "down"
+            # Vertikal placering: kolla horisontellt på brädet, vertikalt i kolumnen
+            over = row[index - 1] if index >= 1 else '.'
+            under = row[index + 1] if index < len(row) - 1 else '.'
+            left = board[index][ind - 1] if ind >= 1 else '.'
+            right = board[index][ind + 1] if ind < len(board[0]) - 1 else '.'
 
-        if over != '.' or under != '.':
+        print(f'over: {over}, under: {under}, left: {left}, right: {right}')
+        if over != '.' or under != '.' or left != '.' or right != '.':
             return False
-    
-
     return True
 
 
@@ -280,6 +286,7 @@ def check_loneliness(possibility, row, ind):
 
 
 def is_valid(word, row, ind, dir): 
+    print("checking", word, "in row", ind, "going", dir)
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -291,10 +298,10 @@ def is_valid(word, row, ind, dir):
 
         if not check_next_letter(possibility, word, row):
             continue
-        
-        if check_loneliness(possibility, row, ind):
-            continue
 
+        print("below problem")
+        if check_loneliness(possibility, row, ind, dir):
+            continue
         if not check_other_rows(merged_row, row, ind):
             continue 
 
@@ -314,8 +321,6 @@ def is_valid(word, row, ind, dir):
             move = [(l, (i, ind)) for i, l in enumerate(merged_row)]
         # remove letters that are in row
         move = [m for m, r in zip(move, row) if m[0] != r]
-
-
 
         return True, move
     return False, (None)
@@ -374,8 +379,13 @@ def main_function(grid, dir, m_board):
                 continue
             if can_make_word(word, letters):
                 valid, move = is_valid(word, row, ind, dir)
+                # checking "slatt" down, (0,8)
+                if (dir == "down" and ind == 8 and word == "slatt"):
+                    print(word, "is:",valid,move)
+                    input("stop")
                 if valid:
                     score = move_score(move, word, dir)
+                    print(f"{word} {score}")
                     if score > max_points:
 
                         best_word = word
@@ -392,7 +402,7 @@ main_function(transpose_board, "down", transpose_multiplier_board)
 
 
 
-
+print("==="*20)
 print(best_word)            
 print(max_points)
 print(position)
