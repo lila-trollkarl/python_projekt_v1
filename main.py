@@ -49,18 +49,17 @@ multiplier_board = [
 ['.', 'DB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'DB', '.'],
 ['TB', '.', '.', '.', 'TO', '.', '.', 'DB', '.', '.', 'TO', '.', '.', '.', 'TB'],
 ] 
-transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-["s", "t", "e", "n", "d", "a", "m", "m", ".", "l", "u", "n", "g", "a", "."],
-[".", ".", ".", ".", ".", ".", ".", "i", ".", ".", "t", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "t", ".", ".", "e", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "t", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "r", "e", ".", "s", "t", "e", "g", "e"],
+[".", ".", ".", ".", "p", "a", "n", "i", "k", ".", "t", ".", ".", ".", "."],
+[".", ".", ".", ".", "c", ".", ".", "n", ".", ".", "e", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "g", ".", ".", "n", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "f", "y", "s", "i", "s", "k", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "i", ".", ".", "g", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "n", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "g", "l", "ö", "m", "s", "k", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "e", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "r", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
@@ -383,7 +382,8 @@ def main_function(grid, dir, m_board):
     
 main_function(board, "right", multiplier_board)
 board = [list(row) for row in zip(*board)]
-main_function(board, "down", transpose_multiplier_board)
+multiplier_board = [list(row) for row in zip(*multiplier_board)]
+main_function(board, "down", multiplier_board)
 board = [list(row) for row in zip(*board)]
 
 
@@ -394,19 +394,42 @@ print(position)
 print(direction)
 print(best_move)
 
-# Print the board with new letters highlighted
+# Print the board with new letters highlighted and color based on multiplier
 if best_move:
     board_to_print = [row.copy() for row in board]
+    color_map = {
+        'TB': '\033[91m',  # Red
+        'TO': '\033[93m',  # Yellow
+        'DB': '\033[94m',  # Blue
+        'DO': '\033[92m',  # Green
+        '.': '',
+    }
+    reset = '\033[0m'
+    # Print color legend
+    print("Legend: "
+          f"{color_map['TB']}[X]{reset}=TB "
+          f"{color_map['TO']}[X]{reset}=TO "
+          f"{color_map['DB']}[X]{reset}=DB "
+          f"{color_map['DO']}[X]{reset}=DO "
+          f"[X]=normal")
     for letter, (row_idx, col_idx) in best_move:
         # Swap coordinates if the move is vertical
         if direction == "down":
             row_idx, col_idx = col_idx, row_idx
         if board[row_idx][col_idx] == '.':
-            board_to_print[row_idx][col_idx] = f'[{letter}]'
+            mult = multiplier_board[row_idx][col_idx]
+            color = color_map.get(mult, '')
+            board_to_print[row_idx][col_idx] = f'{color}[{letter}]{reset}'
         else:
             board_to_print[row_idx][col_idx] = letter
-    print("\nBoard with best move (new letters in brackets):")
-    for row in board_to_print:
-        print(' '.join(f'{c:>3}' for c in row))
+    print("\nBoard with best move (new letters in brackets, colored by multiplier):")
+    for r, row in enumerate(board_to_print):
+        row_str = ''
+        for c, cell in enumerate(row):
+            if isinstance(cell, str) and cell.startswith('\033'):
+                row_str += f'{cell:>6}'
+            else:
+                row_str += f'{cell:>3}'
+        print(row_str)
 else:
     print("No valid move found.")
