@@ -28,6 +28,7 @@ best_word = ""
 max_points = 0
 position = (None, None)
 direction = "hehe" 
+best_move = []
 #
 
 
@@ -128,41 +129,35 @@ def word_score(word):
     return points
 
 
-def move_score(word, pos, dir, m_board):
+def move_score(move, word, dir):
     new_board = [row[:] for row in board]
     total_points = 0
-    r, c = pos
     multiplier = 1
-    
-    # ---- lägger in ordet i nya brädet --- #
-    if dir == "right":
-        for i in range(len(word)):
-            new_board[r][c+i] = word[i]
-# kollar om ordet hamnar på poängbreicka _-------------#
-            if m_board[r][c+i] != '.':
-                if m_board[r][c+i] == "TO":
-                    multiplier *= 3
-                elif m_board[r][c+i] == "DO":
-                    multiplier *= 2
-                elif m_board[r][c+i] == "DB":
-                    total_points += wordfeud_points[word[i]]
-                elif m_board[r][c+i] == "TB":
-                    total_points += wordfeud_points[word[i]]*2
 
-    elif dir == "down":
-        for j in range(len(word)):
-            new_board[r+j][c] = word[j]
-
-            if m_board[r+j][c] != '.':
-                if m_board[r+j][c] == "TO":
-                    multiplier *= 3
-                elif m_board[r+j][c] == "DO":
-                    multiplier *= 2
-                elif m_board[r+j][c] == "DB":
-                    total_points += wordfeud_points[word[j]]*2
-                elif m_board[r+j][c] == "TB":
-                    total_points += wordfeud_points[word[j]]*3
-    
+    for letter, (row, col) in move:
+        # if dir == "right":
+        new_board[row][col] = letter
+        if multiplier_board[row][col] != '.':
+            if multiplier_board[row][col] == "TO":
+                multiplier *= 3
+            if multiplier_board[row][col] == "DO":
+                multiplier *= 2
+            if multiplier_board[row][col] == "TB":
+                total_points += wordfeud_points[letter]*2
+            if multiplier_board[row][col] == "DB":
+                total_points += wordfeud_points[letter]
+        # elif dir == "down":
+        #     new_board[col][row] = letter
+        #     if multiplier_board[col][row] != '.':
+        #         if multiplier_board[col][row] == "TO":
+        #             multiplier *= 3
+        #         if multiplier_board[col][row] == "DO":
+        #             multiplier *= 2
+        #         if multiplier_board[col][row] == "TB":
+        #             total_points += wordfeud_points[letter]*2
+        #         if multiplier_board[col][row] == "DB":
+        #             total_points += wordfeud_points[letter]
+           
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
     new_board_word_list = word_list(new_board)
@@ -174,10 +169,10 @@ def move_score(word, pos, dir, m_board):
 
     print(new_words)
     total_points += multiplier * word_score(word)
-    for word in new_words:
-        total_points += word_score(word)
+    for w in new_words:
+        total_points += word_score(w)
 
-    return total_points
+    return total_points-word_score(word) # account for couting it twice
 
 
 
@@ -310,9 +305,18 @@ def is_valid(word, row, ind):
         # print(word_score(word))
         r = ind
         c = possibility.index(word[0])
+        
+        # ------------ make a move tuple ------------- #
+        
+        move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
+        # remove letters that are in row
+        move = [m for m, r in zip(move, row) if m[0] != r]
 
-        return True, (r, c)
-    return False, (0, 0)
+
+
+        return True, move
+    return False, (None)
+    
 
 
 ##########################################################
@@ -351,24 +355,29 @@ def main_function(grid, dir, m_board):
     global best_word
     global position
     global direction
+    global best_move
+
     for ind, row in enumerate(grid):
         
+        print("~"*50)
+        print(" "*17, end="")
+        print(f"looking at row {ind}") if dir == "right" else print(f"looking at col {ind}")
+        print("~"*50) 
+
         letters = hand + [c for c in row if c != '.']
 
         for word in valid_words:
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, (r, c) = is_valid(word, row, ind)
+                valid, move = is_valid(word, row, ind)
                 if valid:
-                    pos = (r, c) if dir == "right" else (c, r)
-                    score = move_score(word, pos, dir, m_board)
-                    if score > max_points:
+                   score = move_score(move, word, dir)
+                   if score > max_points:
 
                         best_word = word
                         max_points = score
-                        position = (r, c) if dir == "right" else (c, r)
-                        direction = dir
+                        best_move = move
 
     
 main_function(board, "right", multiplier_board)
@@ -383,3 +392,4 @@ print(best_word)
 print(max_points)
 print(position)
 print(direction)
+print(best_move)
