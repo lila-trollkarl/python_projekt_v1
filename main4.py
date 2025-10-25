@@ -1,9 +1,13 @@
+#### BEHLVER LÄGGA TILL"""""transpose_multiplier_board
 
 # så att valid_words inte returnerar på en gång utan kolla alla giltiga positioner
+#
+# att move score endast ska ta hänsyn till dem nya bokstäverna som har lagts och inte "ordet", kanske genom, att skicka in en lista av tuples i formen(bokstav, position)
 
 
 
 
+from itertools import permutations, combinations
 from collections import Counter
 
 # Hej välkommen
@@ -45,60 +49,44 @@ multiplier_board = [
 ['.', 'DB', '.', '.', '.', 'TB', '.', '.', '.', 'TB', '.', '.', '.', 'DB', '.'],
 ['TB', '.', '.', '.', 'TO', '.', '.', 'DB', '.', '.', 'TO', '.', '.', '.', 'TB'],
 ] 
+transpose_multiplier_board = [list(row) for row in zip(*multiplier_board)]
 board = [
-[".", ".", ".", ".", ".", ".", ".", "r", "e", ".", "s", "t", "e", "g", "e"],
-[".", ".", ".", ".", "p", "a", "n", "i", "k", ".", "t", ".", ".", ".", "."],
-[".", ".", ".", ".", "c", ".", ".", "n", ".", ".", "e", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "g", ".", ".", "n", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "f", "y", "s", "i", "s", "k", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "i", ".", ".", "g", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "n", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "g", "l", "ö", "m", "s", "k", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "e", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "r", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."]
+['.', '.', 'v', 'ä', 'k', 't', 'a', 'r', 'e', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'g', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'f', 'y', 's', 'i', 's', 'k', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'i', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'n', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'g', 'l', 'ö', 'm', 's', 'k', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'e', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', 'r', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
 ]
 
 def word_list(board):
     words = []
-    # Check both rows and columns in a unified way
-    for axis in ["row", "col"]:
-        if axis == "row":
-            lines = board
-        else:
-            lines = [list(col) for col in zip(*board)]
-        for idx, line in enumerate(lines):
-            joined = ''.join(line)
-            start = 0
-            while start < len(joined):
-                # Find next word
-                while start < len(joined) and joined[start] == '.':
-                    start += 1
-                end = start
-                while end < len(joined) and joined[end] != '.':
-                    end += 1
-                word = joined[start:end]
-                if len(word) >= 2 and word in valid_words:
-                    coords = []
-                    for i, letter in enumerate(word):
-                        if axis == "row":
-                            coords.append((letter, (idx, start + i)))
-                        else:
-                            coords.append((letter, (start + i, idx)))
-                    words.append(coords)
-                start = end + 1
-    # returns a list of words, where each word is a list of tuples (letter, (row, col)). This is to easily track positions of letters on the board to count points.
+
+    # finds left to right words
+    for row in board:
+        for word in ''.join(row).split('.'):
+            if len(word) >=2 and word in valid_words:
+                words.append(word)
+
+    # finds words vertically
+    for col in [list(row) for row in zip(*board)]:
+        for word in ''.join(col).split('.'):
+            if len(word) >=2 and word in valid_words:
+                words.append(word)
     return words
 
-board_words = []
-for wl in word_list(board):
-    board_words.append(''.join([letter for letter, pos in wl]))
+board_words= word_list(board)
 
-hand = ["s", "l", "a", "a", "t", "a", "t"]
+hand = ["b", "e", "t", "a", "s", "e", "s"]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -143,39 +131,48 @@ def word_score(word):
 
 def move_score(move, word, dir):
     new_board = [row[:] for row in board]
-    for letter, (r, c) in move:
-        new_board[r][c] = letter
     total_points = 0
+    multiplier = 1
+
+    for letter, (row, col) in move:
+        # if dir == "right":
+        new_board[row][col] = letter
+        if multiplier_board[row][col] != '.':
+            if multiplier_board[row][col] == "TO":
+                multiplier *= 3
+            if multiplier_board[row][col] == "DO":
+                multiplier *= 2
+            if multiplier_board[row][col] == "TB":
+                total_points += wordfeud_points[letter]*2
+            if multiplier_board[row][col] == "DB":
+                total_points += wordfeud_points[letter]
+        # elif dir == "down":
+        #     new_board[col][row] = letter
+        #     if multiplier_board[col][row] != '.':
+        #         if multiplier_board[col][row] == "TO":
+        #             multiplier *= 3
+        #         if multiplier_board[col][row] == "DO":
+        #             multiplier *= 2
+        #         if multiplier_board[col][row] == "TB":
+        #             total_points += wordfeud_points[letter]*2
+        #         if multiplier_board[col][row] == "DB":
+        #             total_points += wordfeud_points[letter]
+           
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
     new_board_word_list = word_list(new_board)
     new_words = []
     # ---- kollar vilka ord som är helt nya --- #
     for w in new_board_word_list:
-        clean_word = ''.join([letter for letter, pos in w])
-        if clean_word not in board_words:
+        if w not in board_words:
             new_words.append(w)
 
+    print(new_words)
+    total_points += multiplier * word_score(word)
     for w in new_words:
-        word_points = 0
-        mult_word = 1
-        for letter, (r, c) in w:
-            mult = multiplier_board[r][c]
-            letter_points = wordfeud_points[letter]
-            if board[r][c] == '.': # only apply multipliers for new letters
-                if mult == 'DB':
-                    word_points += letter_points
-                elif mult == 'TB':
-                    word_points += 2 * letter_points
-                elif mult == 'DO':
-                    mult_word *= 2
-                elif mult == 'TO':
-                    mult_word *= 3
-            word_points += letter_points
-        total_points += word_points * mult_word
-        
-        
-    return total_points
+        total_points += word_score(w)
+
+    return total_points-word_score(word) # account for couting it twice
 
 
 
@@ -283,7 +280,6 @@ def check_loneliness(possibility, row, ind):
 
 
 def is_valid(word, row, ind): 
-    move_ls = []
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
         
@@ -295,31 +291,31 @@ def is_valid(word, row, ind):
 
         if not check_next_letter(possibility, word, row):
             continue
-
+        
         if check_loneliness(possibility, row, ind):
             continue
+
         if not check_other_rows(merged_row, row, ind):
             continue 
 
         # print(possibility)
         # print(row)
-        # print(merged_row r = ind
-        # c = possibility.index(word[0])
+        # print(merged_row)
+        # print(word)
+        # print(word_score(word))
+        r = ind
+        c = possibility.index(word[0])
         
         # ------------ make a move tuple ------------- #
-
-        move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
-        move = [m for m, r in zip(move, row) if m[0] != r]
-        if not move:
-            continue  # or return False, (None)
-
-        move_ls.append(move)
-
-
         
-    if move_ls:
-        return True, move_ls
-    return False, []
+        move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
+        # remove letters that are in row
+        move = [m for m, r in zip(move, row) if m[0] != r]
+
+
+
+        return True, move
+    return False, (None)
     
 
 
@@ -374,70 +370,26 @@ def main_function(grid, dir, m_board):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move_list = is_valid(word, row, ind)
-                if valid:   
-                    for move in move_list:
-                        score = move_score(move, word, dir)
-                        print(f"{word} {' '*(15-(len(word)))} {score}")
-                        if score > max_points:
+                valid, move = is_valid(word, row, ind)
+                if valid:
+                   score = move_score(move, word, dir)
+                   if score > max_points:
 
-                            best_word = word
-                            max_points = score
-                            best_move = move
-                            _, position = best_move[0]
-                            direction = dir
+                        best_word = word
+                        max_points = score
+                        best_move = move
 
     
 main_function(board, "right", multiplier_board)
-board = [list(row) for row in zip(*board)]
-multiplier_board = [list(row) for row in zip(*multiplier_board)]
-main_function(board, "down", multiplier_board)
-board = [list(row) for row in zip(*board)]
+transpose_board = [list(row) for row in zip(*board)]
+main_function(transpose_board, "down", transpose_multiplier_board)
 
 
-print("==="*20)
+
+
+
 print(best_word)            
 print(max_points)
 print(position)
 print(direction)
 print(best_move)
-
-# Print the board with new letters highlighted and color based on multiplier
-if best_move:
-    board_to_print = [row.copy() for row in board]
-    color_map = {
-        'TB': '\033[91m',  # Red
-        'TO': '\033[93m',  # Yellow
-        'DB': '\033[94m',  # Blue
-        'DO': '\033[92m',  # Green
-        '.': '',
-    }
-    reset = '\033[0m'
-    # Print color legend
-    print("Legend: "
-          f"{color_map['TB']}[X]{reset}=TB "
-          f"{color_map['TO']}[X]{reset}=TO "
-          f"{color_map['DB']}[X]{reset}=DB "
-          f"{color_map['DO']}[X]{reset}=DO "
-          f"[X]=normal")
-    for letter, (row_idx, col_idx) in best_move:
-        # Swap coordinates if the move is vertical
-        if direction == "down":
-            row_idx, col_idx = col_idx, row_idx
-        if board[row_idx][col_idx] == '.':
-            mult = multiplier_board[row_idx][col_idx]
-            color = color_map.get(mult, '')
-            board_to_print[row_idx][col_idx] = f'{color}[{letter}]{reset}'
-        else:
-            board_to_print[row_idx][col_idx] = letter
-    print("\nBoard with best move (new letters in brackets, colored by multiplier):")
-    for r, row in enumerate(board_to_print):
-        row_str = ''
-        for c, cell in enumerate(row):
-            if isinstance(cell, str) and cell.startswith('\033'):
-                row_str += f'{cell:>6}'
-            else:
-                row_str += f'{cell:>3}'
-        print(row_str)
-else:
-    print("No valid move found.")
