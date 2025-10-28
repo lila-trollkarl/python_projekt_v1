@@ -1,9 +1,4 @@
-#### BEHLVER LÄGGA TILL"""""transpose_multiplier_board
-
-# så att valid_words inte returnerar på en gång utan kolla alla giltiga positioner
-#
-# att move score endast ska ta hänsyn till dem nya bokstäverna som har lagts och inte "ordet", kanske genom, att skicka in en lista av tuples i formen(bokstav, position)
-
+#### BEHLVER LÄGGA TILL #####
 
 
 
@@ -54,11 +49,11 @@ board = [
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "r", "u", "t", "t", "e", "n", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "u", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", "h", "i", "r", "s", ".", ".", ".", ".", "."],
+[".", ".", ".", "b", "e", "s", "e", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", "d", "o", "p", "i", "n", "g", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", "e", "j", ".", ".", ".", "r", "u", "t", "t", "e", "n", ".", "."],
+[".", ".", "l", "a", "g", "t", ".", "u", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", "n", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", "k", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", "a", ".", ".", ".", ".", ".", ".", "."],
@@ -102,7 +97,7 @@ board_words = []
 for wl in word_list(board):
     board_words.append(''.join([letter for letter, pos in wl]))
 
-hand = ["d", "n", "o", "d", "g", "i", "p"]
+hand = ["ö", "m", "d", "r", "o", "g", ""]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -150,6 +145,9 @@ def move_score(move, word, dir):
     for letter, (r, c) in move:
         new_board[r][c] = letter
     total_points = 0
+    letters_from_hand = sum(1 for letter, (r, c) in move if board[r][c] == '.')
+    if letters_from_hand == len(hand):
+        total_points += 50  # bonus for using all letters
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
     new_board_word_list = word_list(new_board)
@@ -382,7 +380,7 @@ def main_function(grid, dir, m_board):
                 if valid:
                     score = move_score(move, word, dir)
                     print(f"{word} {score}")
-                    if score > max_points:
+                    if score >= max_points:
 
                         best_word = word
                         max_points = score
