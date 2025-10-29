@@ -48,14 +48,14 @@ board = [
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", "h", "i", "r", "s", ".", ".", ".", ".", "."],
-[".", ".", ".", "b", "e", "s", "e", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", "d", "o", "p", "i", "n", "g", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", "e", "j", ".", ".", ".", "r", "u", "t", "t", "e", "n", ".", "."],
-[".", ".", "l", "a", "g", "t", ".", "u", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "n", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", "k", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", "m", "o", "d", "i", "g", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", "h", "i", "r", "s", ".", ".", ".", ".", "k"],
+[".", ".", ".", "b", "e", "s", "e", ".", ".", ".", ".", ".", "z", ".", "o"],
+[".", ".", "d", "o", "p", "i", "n", "g", ".", ".", ".", ".", "e", ".", "r"],
+[".", ".", "e", "j", ".", ".", ".", "r", "u", "t", "t", "e", "n", ".", "v"],
+[".", ".", "l", "a", "g", "t", ".", "u", ".", ".", ".", ".", "i", "s", "a"],
+[".", ".", ".", ".", ".", ".", ".", "n", ".", "ä", "r", ".", "t", "y", "."],
+[".", ".", ".", ".", ".", ".", ".", "k", "å", "r", "e", ".", ".", "o", "m"],
 [".", ".", ".", ".", ".", ".", ".", "a", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
@@ -97,7 +97,7 @@ board_words = []
 for wl in word_list(board):
     board_words.append(''.join([letter for letter, pos in wl]))
 
-hand = ["ö", "m", "d", "r", "o", "g", ""]
+hand = ["ö", "h", "f", "å", "e", "t", "b"]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -140,7 +140,7 @@ def word_score(word):
     return points
 
 
-def move_score(move, word, dir):
+def move_score(move, word, dir, wildcard_letters): # <--- NY PARAMETER
     new_board = [row[:] for row in board]
     for letter, (r, c) in move:
         new_board[r][c] = letter
@@ -158,24 +158,42 @@ def move_score(move, word, dir):
         if clean_word not in board_words:
             new_words.append(w)
 
+    # --- NY LOGIK FÖR JOKER-POSITIONER ---
+    # Hitta de exakta (r, c) koordinaterna där jokrar placerades
+    wildcard_placements = []
+    wildcard_letters_copy = wildcard_letters.copy()
+    for letter, (r, c) in move:
+        if letter in wildcard_letters_copy:
+            wildcard_placements.append((r, c))
+            wildcard_letters_copy.remove(letter)
+    # --- SLUT PÅ NY LOGIK ---
+
     for w in new_words:
         word_points = 0
         mult_word = 1
         for letter, (r, c) in w:
             mult = multiplier_board[r][c]
-            letter_points = wordfeud_points[letter]
+
+            # --- NY POÄNGLOGIK ---
+            # Kolla om denna bricka på denna position var en joker
+            is_wildcard = (r, c) in wildcard_placements
+            letter_points = 0 if is_wildcard else wordfeud_points[letter]
+            # --- SLUT PÅ NY POÄNGLOGIK ---
+            
+            word_score_to_add = letter_points # Grundpoäng (0 för joker)
             if board[r][c] == '.': # only apply multipliers for new letters
                 if mult == 'DB':
-                    word_points += letter_points
+                    word_score_to_add += letter_points # Total 2*letter_points
                 elif mult == 'TB':
-                    word_points += 2 * letter_points
+                    word_score_to_add += 2 * letter_points # Total 3*letter_points
                 elif mult == 'DO':
                     mult_word *= 2
                 elif mult == 'TO':
                     mult_word *= 3
-            word_points += letter_points
-        total_points += word_points * mult_word
+            
+            word_points += word_score_to_add
         
+        total_points += word_points * mult_word
         
     return total_points
 
@@ -192,8 +210,15 @@ def merge_row(word_row, row):
 
 
 def can_make_word(word, letters):
-    need = Counter(word)
-    return not (need - Counter(letters))
+    hand_counts = Counter(letters)
+    wild_cards = hand_counts.pop('*', 0)  # Räkna jokrar och ta bort dem
+    word_counts = Counter(word)
+    
+    missing_letters = word_counts - hand_counts
+    
+    # Ordet kan göras om det totala antalet bokstäver som saknas
+    # är mindre än eller lika med antalet jokrar.
+    return sum(missing_letters.values()) <= wild_cards
 
 
 
@@ -222,14 +247,21 @@ def check_no_letter_collision(possibility, row):
 
 # kollar så att en bokstav som finns i mereged row men inte i row måste komma från handen
 def check_letters_ok(row, merged_row, hand):
-    hand_copy = hand.copy()
+    hand_counts = Counter(hand)
+    wild_cards = hand_counts.pop('*', 0) # Hämta jokrar
+
+    needed_from_hand = []
     for old, new in zip(row, merged_row):
         if old == '.' and new != '.':
-            if new in hand_copy:
-                hand_copy.remove(new)
-            else:
-                return False
-    return True
+            needed_from_hand.append(new)
+    
+    needed_counts = Counter(needed_from_hand)
+    
+    # Räkna ut vilka bokstäver som saknas *efter* att ha använt vanliga brickor
+    missing = needed_counts - hand_counts
+    
+    # Kolla om antalet saknade brickor kan täckas av jokrarna
+    return sum(missing.values()) <= wild_cards
 
 # kollar så att ordet inte ligger precis brevid en annan bokstav i radenbrädet
 def check_next_letter(possibility, word, row):
@@ -294,6 +326,10 @@ def is_valid(word, row, ind):
 
         if not check_letters_ok(row, merged_row, hand):
             continue
+        
+        # Den här printen/input() låg fel, flyttad efter de första kontrollerna
+        # print("issue below") 
+        # input()
 
         if not check_next_letter(possibility, word, row):
             continue
@@ -303,11 +339,6 @@ def is_valid(word, row, ind):
         if not check_other_rows(merged_row, row, ind):
             continue 
 
-        # print(possibility)
-        # print(row)
-        # print(merged_row)
-        # print(word)
-        # print(word_score(word))
         r = ind
         c = possibility.index(word[0])
         
@@ -316,12 +347,24 @@ def is_valid(word, row, ind):
         move = [(l, (ind, i)) for i, l in enumerate(merged_row)]
         move = [m for m, r in zip(move, row) if m[0] != r]
         if not move:
-            continue  # or return False, (None)
+            continue
 
+        # --- NY LOGIK FÖR ATT HITTA JOKRAR ---
+        # Ta reda på vilka bokstäver som behövdes från handen
+        needed_from_hand = [letter for letter, pos in move]
+        
+        hand_counts = Counter(hand)
+        wild_cards_available = hand_counts.pop('*', 0)
+        needed_counts = Counter(needed_from_hand)
+        
+        # Räkna ut vilka bokstäver som *måste* ha varit jokrar
+        missing_counts = needed_counts - hand_counts 
+        wildcard_letters_used = list(missing_counts.elements())
+        # --- SLUT PÅ NY LOGIK ---
 
-
-        return True, move
-    return False, (None)
+        return True, move, wildcard_letters_used # <--- ÄNDRAD RETUR
+    
+    return False, (None), [] # <--- ÄNDRAD RETUR
     
 
 
@@ -376,9 +419,10 @@ def main_function(grid, dir, m_board):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move = is_valid(word, row, ind)
+                valid, move, wildcard_letters = is_valid(word, row, ind)
+              #  input("press enter to continue...")
                 if valid:
-                    score = move_score(move, word, dir)
+                    score = move_score(move, word, dir, wildcard_letters)
                     print(f"{word} {score}")
                     if score >= max_points:
 
@@ -388,7 +432,8 @@ def main_function(grid, dir, m_board):
                             'word': word,
                             'move': move,
                             'direction': dir,
-                            'points': score
+                            'points': score,
+                            'wildcards': wildcard_letters # Bra att spara
                         })
                         #first_letter, position = best_move[0]
                         direction = dir
@@ -431,18 +476,21 @@ if __name__ == "__main__":
                 f"{color_map['TO']}[X]{reset}=TO "
                 f"{color_map['DB']}[X]{reset}=DB "
                 f"{color_map['DO']}[X]{reset}=DO "
-                f"[X]=normal")
+                f"[X]=normal, [X*]=wildcard")
+            original_hand_letters = set(hand) - {'*'}
             for letter, (row_idx, col_idx) in item['move']:
                 # Swap coordinates if the move is vertical
-                if direction == "down":
+                if item['direction'] == "down":
                     row_idx, col_idx = col_idx, row_idx
                 if board[row_idx][col_idx] == '.':
                     mult = multiplier_board[row_idx][col_idx]
                     color = color_map.get(mult, '')
-                    board_to_print[row_idx][col_idx] = f'{color}[{letter}]{reset}'
+                    is_wildcard = letter not in original_hand_letters
+                    suffix = '*' if is_wildcard else ''
+                    board_to_print[row_idx][col_idx] = f'{color}[{letter}{suffix}]{reset}'
                 else:
                     board_to_print[row_idx][col_idx] = letter
-            print("\nBoard with best move (new letters in brackets, colored by multiplier):")
+            print("\nBoard with best move (new letters in brackets, colored by multiplier, * indicates wildcard):")
             for r, row in enumerate(board_to_print):
                 row_str = ''
                 for c, cell in enumerate(row):
