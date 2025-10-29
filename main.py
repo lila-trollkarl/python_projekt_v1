@@ -145,8 +145,8 @@ def move_score(move, word, dir):
     for letter, (r, c) in move:
         new_board[r][c] = letter
     total_points = 0
-    letters_from_hand = sum(1 for letter, (r, c) in move if board[r][c] == '.')
-    if letters_from_hand == len(hand):
+    letters_used_from_hand = sum(1 for letter, (r, c) in move if board[r][c] == '.')
+    if letters_used_from_hand == len(hand):
         total_points += 50  # bonus for using all letters
 
     # ---- skapar en lista med alla ord i det nya brädet ---#
@@ -393,74 +393,76 @@ def main_function(grid, dir, m_board):
                         #first_letter, position = best_move[0]
                         direction = dir
 
-    
-main_function(board, "right", multiplier_board)
-board = [list(row) for row in zip(*board)]
-multiplier_board = [list(row) for row in zip(*multiplier_board)]
-main_function(board, "down", multiplier_board)
-board = [list(row) for row in zip(*board)]
+if __name__ == "__main__":
+    main_function(board, "right", multiplier_board)
+    board = [list(row) for row in zip(*board)]
+    multiplier_board = [list(row) for row in zip(*multiplier_board)]
+    main_function(board, "down", multiplier_board)
+    board = [list(row) for row in zip(*board)]
 
 
-print("==="*20)
+    print("==="*20)
 
-nbr_of_moves_to_show = int(input("Antal drag att visa: "))
+    nbr_of_moves_to_show = int(input("Antal drag att visa: "))
 
-for item in best_move[-nbr_of_moves_to_show:]:
-    print(item['word'])
-    print(item['points'])
-# print(best_word)            
-# print(max_points)
-# print(position)
-# print(direction)
-# print(best_move)
+    for item in best_move[-nbr_of_moves_to_show:]:
+        print(item['word'])
+        print(item['points'])
+    # print(best_word)            
+    # print(max_points)
+    # print(position)
+    # print(direction)
+    # print(best_move)
 
-    # Print the board with new letters highlighted and color based on multiplier
-    if item['move']:
-        board_to_print = [row.copy() for row in board]
-        color_map = {
-            'TB': '\033[91m',  # Red
-            'TO': '\033[93m',  # Yellow
-            'DB': '\033[94m',  # Blue
-            'DO': '\033[92m',  # Green
-            '.': '',
-        }
-        reset = '\033[0m'
-        # Print color legend
-        print("Legend: "
-            f"{color_map['TB']}[X]{reset}=TB "
-            f"{color_map['TO']}[X]{reset}=TO "
-            f"{color_map['DB']}[X]{reset}=DB "
-            f"{color_map['DO']}[X]{reset}=DO "
-            f"[X]=normal")
-        for letter, (row_idx, col_idx) in item['move']:
-            # Swap coordinates if the move is vertical
-            if direction == "down":
-                row_idx, col_idx = col_idx, row_idx
-            if board[row_idx][col_idx] == '.':
-                mult = multiplier_board[row_idx][col_idx]
-                color = color_map.get(mult, '')
-                board_to_print[row_idx][col_idx] = f'{color}[{letter}]{reset}'
-            else:
-                board_to_print[row_idx][col_idx] = letter
-        print("\nBoard with best move (new letters in brackets, colored by multiplier):")
-        for r, row in enumerate(board_to_print):
-            row_str = ''
-            for c, cell in enumerate(row):
-                if isinstance(cell, str) and cell.startswith('\033'):
-                    row_str += f'{cell:>6}'
+        # Print the board with new letters highlighted and color based on multiplier
+        if item['move']:
+            board_to_print = [row.copy() for row in board]
+            color_map = {
+                'TB': '\033[91m',  # Red
+                'TO': '\033[93m',  # Yellow
+                'DB': '\033[94m',  # Blue
+                'DO': '\033[92m',  # Green
+                '.': '',
+            }
+            reset = '\033[0m'
+            # Print color legend
+            print("Legend: "
+                f"{color_map['TB']}[X]{reset}=TB "
+                f"{color_map['TO']}[X]{reset}=TO "
+                f"{color_map['DB']}[X]{reset}=DB "
+                f"{color_map['DO']}[X]{reset}=DO "
+                f"[X]=normal")
+            for letter, (row_idx, col_idx) in item['move']:
+                # Swap coordinates if the move is vertical
+                if direction == "down":
+                    row_idx, col_idx = col_idx, row_idx
+                if board[row_idx][col_idx] == '.':
+                    mult = multiplier_board[row_idx][col_idx]
+                    color = color_map.get(mult, '')
+                    board_to_print[row_idx][col_idx] = f'{color}[{letter}]{reset}'
                 else:
-                    row_str += f'{cell:>3}'
-            print(row_str)
-    else:
-        print("No valid move found.")
+                    board_to_print[row_idx][col_idx] = letter
+            print("\nBoard with best move (new letters in brackets, colored by multiplier):")
+            for r, row in enumerate(board_to_print):
+                row_str = ''
+                for c, cell in enumerate(row):
+                    if isinstance(cell, str) and cell.startswith('\033'):
+                        row_str += f'{cell:>6}'
+                    else:
+                        row_str += f'{cell:>3}'
+                print(row_str)
+        else:
+            print("No valid move found.")
 
-while True:
-    word_to_remove = input('Ord som inte finns i wordfueds ordlistan: ').lower()
-    # remove the word from the source file SAOL13_AND_14.txt
-    if word_to_remove in valid_words:
-        with open(dictionary, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        with open(dictionary, "w", encoding="utf-8") as f:
-            for line in lines:
-                if line.strip().lower() != word_to_remove:
-                    f.write(line)
+    while True:
+        word_to_remove = input('Ord som inte finns i wordfueds ordlistan: ').lower()
+        if word_to_remove == 'exit':
+            break
+        # remove the word from the source file SAOL13_AND_14.txt
+        if word_to_remove in valid_words:
+            with open(dictionary, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            with open(dictionary, "w", encoding="utf-8") as f:
+                for line in lines:
+                    if line.strip().lower() != word_to_remove:
+                        f.write(line)
