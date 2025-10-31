@@ -453,8 +453,8 @@ def init(hand, board):
 
     print("==="*20)
 
-    nbr_of_moves_to_show = int(input("Antal drag att visa: "))
-
+    #nbr_of_moves_to_show = int(input("Antal drag att visa: "))
+    nbr_of_moves_to_show = 1
     for item in best_move[-nbr_of_moves_to_show:]:
         print(item['word'])
         print(item['points'])
@@ -507,18 +507,20 @@ def init(hand, board):
         else:
             print("No valid move found.")
 
-    while True:
-        word_to_remove = input('Ord som inte finns i wordfueds ordlistan: ').lower()
-        if word_to_remove == 'exit':
-            break
-        # remove the word from the source file SAOL13_AND_14.txt
-        if word_to_remove in valid_words:
-            with open(dictionary, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-            with open(dictionary, "w", encoding="utf-8") as f:
-                for line in lines:
-                    if line.strip().lower() != word_to_remove:
-                        f.write(line)
+    # while True:
+    #     word_to_remove = input('Ord som inte finns i wordfueds ordlistan: ').lower()
+    #     if word_to_remove == 'exit':
+    #         break
+    #     # remove the word from the source file SAOL13_AND_14.txt
+    #     if word_to_remove in valid_words:
+    #         with open(dictionary, "r", encoding="utf-8") as f:
+    #             lines = f.readlines()
+    #         with open(dictionary, "w", encoding="utf-8") as f:
+    #             for line in lines:
+    #                 if line.strip().lower() != word_to_remove:
+    #                     f.write(line)
+
+    return best_move
 
 if __name__ == "__main__":
     init(hand, board)
