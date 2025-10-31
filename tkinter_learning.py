@@ -23,11 +23,39 @@ def extract_board(grid_entries):
     return board
 
 def approve_move(move, board):
-    for letter, (r,c) in move:
+    for letter, (r,c) in move['move']:
         board[r][c] = letter
     with open("working_board.json", "w") as file:
         write_2d_array("working_board.json", board)
     root.destroy()
+
+def show_move(move, board):
+    # clear screen
+    for ridx,r in enumerate(board):
+        for cidx,c in enumerate(r):
+            if c != grid_entries[ridx][cidx].get():
+                grid_entries[ridx][cidx].delete(0,tk.END)
+                grid_entries[ridx][cidx].config(bg="gray11")
+
+    coords = move['move']
+    for letter, (r,c) in coords:
+        grid_entries[r][c].insert(0,letter)
+        grid_entries[r][c].config(bg="green")
+
+    points = move['points']
+    points_label.config(text=f"Poäng för draget: {points}")
+    points_label.pack()
+
+def show_next(best_moves, idx, board):
+    if idx[0] > -len(best_moves):
+        idx[0] -= 1
+        show_move(best_moves[idx[0]], board)
+
+def show_previous(best_moves, idx, board):
+    if idx[0] < -1:
+        print("he,lo")
+        idx[0] += 1
+        show_move(best_moves[idx[0]], board)
 
 def retrieve(my_entry,result_label, grid_entries):
     result_label.config(text="")
@@ -48,12 +76,15 @@ def retrieve(my_entry,result_label, grid_entries):
     best_moves = m.init(hand, board)
     label.destroy()
 
-    best_move = best_moves[-1]['move']
-    for letter, (r,c) in best_move:
-        grid_entries[r][c].insert(0,letter)
-        grid_entries[r][c].config(bg="green")
+    move_idx = [-1]
+    show_move(best_moves[-1], board)
 
-    approve_button = tk.Button(frame, text="Godkänn drag", command= lambda: approve_move(best_move, board))
+    next = tk.Button(frame, text="Nästa drag", command= lambda: show_next(best_moves, move_idx, board))
+    previous = tk.Button(frame, text="Tidigare drag", command= lambda: show_previous(best_moves, move_idx, board))
+    next.pack()
+    previous.pack()
+
+    approve_button = tk.Button(frame, text="Godkänn drag", command= lambda: approve_move(best_moves[move_idx[0]], board))
     approve_button.pack()
 
 
@@ -79,6 +110,9 @@ label = tk.Label(frame, text="Din hand:")
 label.pack()
 my_entry = tk.Entry(frame)
 my_entry.pack()
+
+points_label = tk.Label(frame, text="")
+points_label.pack()
 
 result_label = tk.Label(frame, text="")
 result_label.pack()
