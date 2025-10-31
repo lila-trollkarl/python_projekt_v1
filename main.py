@@ -84,7 +84,7 @@ def board_words(board):
         board_words.append(''.join([letter for letter, pos in wl]))
     return board_words
 
-hand = ["ö", "å", "t", "f", "t", "r", "a"]
+
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -127,7 +127,7 @@ def word_score(word):
     return points
 
 
-def move_score(move, board, wildcard_letters):
+def move_score(move, hand, board, wildcard_letters):
     new_board = [row[:] for row in board]
     for letter, (r, c) in move:
         new_board[r][c] = letter
@@ -302,7 +302,7 @@ def check_loneliness(board, possibility, row, ind):
 #####################################
 
 
-def is_valid(board, word, row, ind): 
+def is_valid(board, hand, word, row, ind): 
     
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
@@ -405,10 +405,10 @@ def main_function(hand, board, dir):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move, wildcard_letters = is_valid(board, word, row, ind)
+                valid, move, wildcard_letters = is_valid(board, hand, word, row, ind)
                 #  input("press enter to continue...")
                 if valid:
-                    score = move_score(move, board, wildcard_letters)
+                    score = move_score(move, hand, board, wildcard_letters)
                     print(f"{word} {score}")
                     if score >= max_points:
 
