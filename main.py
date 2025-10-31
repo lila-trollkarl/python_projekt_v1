@@ -47,18 +47,18 @@ multiplier_board = [
 board = [
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", ".", ".", "s", ".", "v", "a", "x", "a", "."],
 [".", ".", ".", ".", ".", ".", ".", "m", "o", "d", "i", "g", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", "h", "i", "r", "s", ".", ".", ".", ".", "k"],
-[".", ".", ".", "b", "e", "s", "e", ".", ".", ".", ".", ".", "z", ".", "o"],
-[".", ".", "d", "o", "p", "i", "n", "g", ".", ".", ".", ".", "e", ".", "r"],
+[".", ".", ".", ".", "p", ".", "h", "i", "r", "s", ".", ".", ".", "k", "k"],
+[".", ".", ".", "b", "e", "s", "e", ".", "l", ".", ".", ".", "z", "o", "o"],
+[".", ".", "d", "o", "p", "i", "n", "g", ".", ".", ".", "f", "e", ".", "r"],
 [".", ".", "e", "j", ".", ".", ".", "r", "u", "t", "t", "e", "n", ".", "v"],
-[".", ".", "l", "a", "g", "t", ".", "u", ".", ".", ".", ".", "i", "s", "a"],
+[".", ".", "l", "a", "g", "t", ".", "u", ".", ".", ".", "s", "i", "s", "a"],
 [".", ".", ".", ".", ".", ".", ".", "n", ".", "ä", "r", ".", "t", "y", "."],
 [".", ".", ".", ".", ".", ".", ".", "k", "å", "r", "e", ".", ".", "o", "m"],
-[".", ".", ".", ".", ".", ".", ".", "a", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
-[".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+[".", ".", ".", ".", ".", ".", "h", "a", "l", ".", "s", "i", "l", ".", "."],
+[".", ".", ".", ".", ".", ".", "b", ".", ".", ".", "e", "d", "a", ".", "."],
+[".", ".", ".", ".", ".", ".", "t", ".", ".", ".", ".", ".", ".", ".", "."],
 [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."]
 ]
 
@@ -93,11 +93,13 @@ def word_list(board):
     # returns a list of words, where each word is a list of tuples (letter, (row, col)). This is to easily track positions of letters on the board to count points.
     return words
 
-board_words = []
-for wl in word_list(board):
-    board_words.append(''.join([letter for letter, pos in wl]))
+def board_words(board):
+    board_words = []
+    for wl in word_list(board):
+        board_words.append(''.join([letter for letter, pos in wl]))
+    return board_words
 
-hand = ["ö", "h", "f", "å", "e", "t", "b"]
+hand = ["ö", "å", "t", "f", "t", "r", "a"]
 wordfeud_points = {
     'a': 1,
     'b': 4,
@@ -140,7 +142,7 @@ def word_score(word):
     return points
 
 
-def move_score(move, word, dir, wildcard_letters): # <--- NY PARAMETER
+def move_score(move, board, wildcard_letters):
     new_board = [row[:] for row in board]
     for letter, (r, c) in move:
         new_board[r][c] = letter
@@ -155,10 +157,9 @@ def move_score(move, word, dir, wildcard_letters): # <--- NY PARAMETER
     # ---- kollar vilka ord som är helt nya --- #
     for w in new_board_word_list:
         clean_word = ''.join([letter for letter, pos in w])
-        if clean_word not in board_words:
+        if clean_word not in board_words(board):
             new_words.append(w)
 
-    # --- NY LOGIK FÖR JOKER-POSITIONER ---
     # Hitta de exakta (r, c) koordinaterna där jokrar placerades
     wildcard_placements = []
     wildcard_letters_copy = wildcard_letters.copy()
@@ -272,7 +273,7 @@ def check_next_letter(possibility, word, row):
     return True
 
 # Check if word in row is next to letters inother rows, and if it is, make sure that new text is also a word
-def check_other_rows(merged_row, row, ind):
+def check_other_rows(board, merged_row, row, ind):
     new_letters = [x if x != '.' and y == '.' else y for x, y in zip(merged_row, row)]
     temp_board = [row.copy() for row in board]
     temp_board[ind] = new_letters
@@ -288,7 +289,7 @@ def check_other_rows(merged_row, row, ind):
 
 
 # Kollar så att ordet inte bara ligger helt själv
-def check_loneliness(possibility, row, ind):
+def check_loneliness(board, possibility, row, ind):
 
 # ------ kollar så att minst en bokstav överlappar i possibility och row --- #
     for x, y in zip(possibility, row):
@@ -316,7 +317,7 @@ def check_loneliness(possibility, row, ind):
 #####################################
 
 
-def is_valid(word, row, ind): 
+def is_valid(board, word, row, ind): 
     
     for possibility in generate_possibilities(word, row):
         merged_row = merge_row(possibility, row)
@@ -334,9 +335,9 @@ def is_valid(word, row, ind):
         if not check_next_letter(possibility, word, row):
             continue
 
-        if check_loneliness(possibility, row, ind):
+        if check_loneliness(board,possibility, row, ind):
             continue
-        if not check_other_rows(merged_row, row, ind):
+        if not check_other_rows(board, merged_row, row, ind):
             continue 
 
         r = ind
@@ -399,14 +400,14 @@ def is_valid(word, row, ind):
 
 print("hej")
 
-def main_function(grid, dir, m_board):
+def main_function(hand, board, dir):
     global max_points
     global best_word
     global position
     global direction
     global best_move
 
-    for ind, row in enumerate(grid):
+    for ind, row in enumerate(board):
         
         print("~"*50)
         print(" "*17, end="")
@@ -419,10 +420,10 @@ def main_function(grid, dir, m_board):
             if len(word) < 2 or len(word) > len(letters):
                 continue
             if can_make_word(word, letters):
-                valid, move, wildcard_letters = is_valid(word, row, ind)
-              #  input("press enter to continue...")
+                valid, move, wildcard_letters = is_valid(board, word, row, ind)
+                #  input("press enter to continue...")
                 if valid:
-                    score = move_score(move, word, dir, wildcard_letters)
+                    score = move_score(move, board, wildcard_letters)
                     print(f"{word} {score}")
                     if score >= max_points:
 
@@ -438,11 +439,13 @@ def main_function(grid, dir, m_board):
                         #first_letter, position = best_move[0]
                         direction = dir
 
-if __name__ == "__main__":
-    main_function(board, "right", multiplier_board)
+
+def init(hand, board):
+    global multiplier_board
+    main_function(hand, board, "right")
     board = [list(row) for row in zip(*board)]
     multiplier_board = [list(row) for row in zip(*multiplier_board)]
-    main_function(board, "down", multiplier_board)
+    main_function(hand, board, "down")
     board = [list(row) for row in zip(*board)]
 
 
@@ -514,3 +517,6 @@ if __name__ == "__main__":
                 for line in lines:
                     if line.strip().lower() != word_to_remove:
                         f.write(line)
+
+if __name__ == "__main__":
+    init(hand, board)
