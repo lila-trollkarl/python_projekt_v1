@@ -427,6 +427,8 @@ def main_function(hand, board, dir):
                     print(f"{word} {score}")
                     if score >= max_points:
 
+                        if dir == "down":
+                            move = [(letter, (c,r)) for letter,(r,c) in move]
                         best_word = word
                         max_points = score
                         best_move.append({
@@ -483,8 +485,8 @@ def init(hand, board):
             original_hand_letters = set(hand) - {'*'}
             for letter, (row_idx, col_idx) in item['move']:
                 # Swap coordinates if the move is vertical
-                if item['direction'] == "down":
-                    row_idx, col_idx = col_idx, row_idx
+                # if item['direction'] == "down":
+                #     row_idx, col_idx = col_idx, row_idx
                 if board[row_idx][col_idx] == '.':
                     mult = multiplier_board[row_idx][col_idx]
                     color = color_map.get(mult, '')
