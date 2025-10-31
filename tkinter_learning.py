@@ -27,6 +27,7 @@ def approve_move(move, board):
         board[r][c] = letter
     with open("working_board.json", "w") as file:
         write_2d_array("working_board.json", board)
+    root.destroy()
 
 def retrieve(my_entry,result_label, grid_entries):
     result_label.config(text="")
@@ -46,12 +47,14 @@ def retrieve(my_entry,result_label, grid_entries):
 
     best_moves = m.init(hand, board)
     label.destroy()
-    for letter, (r,c) in best_moves[-1]['move']:
+
+    best_move = best_moves[-1]['move']
+    for letter, (r,c) in best_move:
         grid_entries[r][c].insert(0,letter)
         grid_entries[r][c].config(bg="green")
 
-    approve_move(best_moves[-1]['move'], board)
-
+    approve_button = tk.Button(frame, text="Godkänn drag", command= lambda: approve_move(best_move, board))
+    approve_button.pack()
 
 
 ######################################################
