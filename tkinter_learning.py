@@ -2,6 +2,16 @@ import tkinter as tk
 import json
 import main as m
 
+def write_2d_array(filename, array):
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write('[\n')
+        for i, row in enumerate(array):
+            if i < len(array) - 1:
+                f.write('  ' + json.dumps(row, ensure_ascii=False) + ',\n')
+            else:
+                f.write('  ' + json.dumps(row, ensure_ascii=False) + '\n')
+        f.write(']\n')
+
 def extract_board(grid_entries):
     board = []
     for row in grid_entries:
@@ -16,7 +26,7 @@ def approve_move(move, board):
     for letter, (r,c) in move:
         board[r][c] = letter
     with open("working_board.json", "w") as file:
-        json.dump(board, file)
+        write_2d_array("working_board.json", board)
 
 def retrieve(my_entry,result_label, grid_entries):
     result_label.config(text="")
@@ -42,6 +52,17 @@ def retrieve(my_entry,result_label, grid_entries):
 
     approve_move(best_moves[-1]['move'], board)
 
+
+
+######################################################
+######################################################
+################ funktioner ^ ########################
+################ huvud program -> ####################
+######################################################
+
+with open("working_board.json", "r", encoding="utf-8") as file:
+    board = json.load(file)
+
 root = tk.Tk()
 
 root.title("Hello World")
@@ -64,11 +85,12 @@ grid_frame = tk.Frame(root)
 grid_frame.pack()
 
 grid_entries = []
-for row in range(15):
+for row_idx,row in enumerate(board):
     row_entries = []
-    for col in range(15):
+    for col_idx,col in enumerate(row):
         grid_entry = tk.Entry(grid_frame, width=2)
-        grid_entry.grid(row=row, column=col, padx=1, pady=1)
+        grid_entry.grid(row=row_idx, column=col_idx, padx=1, pady=1)
+        grid_entry.insert(0,col if col != '.' else '')
         row_entries.append(grid_entry)
     grid_entries.append(row_entries)
     
