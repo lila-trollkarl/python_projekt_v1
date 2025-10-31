@@ -1,14 +1,8 @@
 import tkinter as tk
+import json
 import main as m
 
-def retrieve(my_entry,result_label, grid_entries):
-    result_label.config(text="")
-
-    hand = list(my_entry.get().strip().lower())
-    print(hand)
-    if (len(hand) > 7 or not all(letter.isalpha() or letter == "*" for letter in hand)):
-        result_label.config(text="Måste vara 7 bokstäver långt!")
-    
+def extract_board(grid_entries):
     board = []
     for row in grid_entries:
         board_row = []
@@ -16,10 +10,37 @@ def retrieve(my_entry,result_label, grid_entries):
             value = entry.get().strip().lower()
             board_row.append(value if value else '.')
         board.append(board_row)
-    print(board)
+    return board
 
-    m.init(hand, board)
+def approve_move(move, board):
+    for letter, (r,c) in move:
+        board[r][c] = letter
+    with open("working_board.json", "w") as file:
+        json.dump(board, file)
 
+def retrieve(my_entry,result_label, grid_entries):
+    result_label.config(text="")
+    root.update()
+
+    hand = list(my_entry.get().strip().lower())
+    print(hand)
+    if (len(hand) > 7 or not all(letter.isalpha() or letter == "*" for letter in hand)):
+        return result_label.config(text="Måste vara 7 bokstäver långt!")
+    
+    board = extract_board(grid_entries)
+
+    button.pack_forget()
+    label = tk.Label(frame, text="Tänker väldigt mycket...")
+    label.pack()
+    root.update()
+
+    best_moves = m.init(hand, board)
+    label.destroy()
+    for letter, (r,c) in best_moves[-1]['move']:
+        grid_entries[r][c].insert(0,letter)
+        grid_entries[r][c].config(bg="green")
+
+    approve_move(best_moves[-1]['move'], board)
 
 root = tk.Tk()
 
